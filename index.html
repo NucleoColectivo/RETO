@@ -258,7 +258,7 @@
                 else { await signInAnonymously(auth); }
 
             } catch (error) {
-                console.error("Error al inicializar Firebase:", error);
+                console.error("Error al inicializar o autenticar con Firebase:", error);
                 authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Firebase</p>`;
             }
         }
@@ -281,7 +281,7 @@
         const desafios = ["Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo", "Gentrificación Cultural", "Brecha Generacional", "Desinformación y Noticias Falsas", "Apatía Política", "Saturación del Mercado", "Vandalismo y Falta de Cuidado"];
         const contextos = ["una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido", "una Biblioteca Pública", "un Barrio Histórico en Transformación", "una Plataforma de Streaming", "un Festival de Música Independiente", "un Hospital Público", "una Antigua Zona Industrial"];
         
-        const emojis = { CONCEPTO: "💡", ACCIÓN: "🛠️", DESAFÍO: "🔥", CONTEXTO: "🌍" };
+        const emojis = { CONCEPTO: "�", ACCIÓN: "🛠️", DESAFÍO: "🔥", CONTEXTO: "🌍" };
         const colors = { CONCEPTO: "#39a7ff", ACCIÓN: "#ff5733", DESAFÍO: "#ff1744", CONTEXTO: "#32cd32" };
 
         const startScreen = document.getElementById('start-screen');
@@ -471,19 +471,29 @@
 
         async function callGeminiAPI(prompt, jsonSchema = null) {
             const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             if (jsonSchema) {
                 payload.generationConfig = {
                     responseMimeType: "application/json",
-                    responseSchema: jsonSchema,
+                    responseSchema: jsonSchema
                 };
             }
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
-            const result = await response.json();
-            if (result.candidates?.[0]?.content?.parts?.[0]?.text) { return result.candidates[0].content.parts[0].text; }
-            else { throw new Error(result.promptFeedback?.blockReason ? `Prompt was blocked: ${result.promptFeedback.blockReason}` : 'No content received from API.'); }
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { 
+                    throw new Error(`La solicitud a la API falló con estado ${response.status}`); 
+                }
+                const data = await response.json();
+                if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+                return "No se pudo generar una respuesta válida de la IA.";
+            } catch (error) {
+                console.error("Error llamando a la API de Gemini:", error);
+                return "Hubo un error al contactar la IA. Verifica la conexión o la clave de API.";
+            }
         }
 
         function getSavedChallenges() { return JSON.parse(localStorage.getItem('savedChallenges')) || []; }
@@ -544,3 +554,4 @@
     </script>
 </body>
 </html>
+�
