@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reto Creativo - Núcleo Colectivo con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0a0a1a;
+            color: #FFFFFF;
+            overflow-x: hidden;
+            background: linear-gradient(-45deg, #0a0a1a, #1a0a1a, #0a1a1a, #1a1a0a);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+        }
+        .glass-card {
+            background: rgba(28, 28, 44, 0.5);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            min-height: 220px;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .btn {
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: none;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-neon {
+            background-color: #8A2BE2;
+            color: #FFFFFF;
+            box-shadow: 0 0 5px #8A2BE2, 0 0 15px #8A2BE2, 0 0 25px #8A2BE2;
+        }
+        .btn-neon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #8A2BE2, 0 0 25px #8A2BE2, 0 0 50px #8A2BE2;
+        }
+        .btn-secondary {
+             background-color: rgba(255,255,255,0.1);
+             border: 1px solid rgba(255,255,255,0.2);
+        }
+         .btn-secondary:hover {
+             background-color: rgba(255,255,255,0.2);
+             transform: scale(1.05);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #FFFFFF;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn .btn-text { transition: opacity 0.2s; }
+        .btn.loading .btn-text { opacity: 0; }
+        .btn .spinner-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .btn.loading .spinner-container { opacity: 1; }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+        .neon-accent {
+            color: #ff00ff; /* Magenta */
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 md:p-8">
+
+    <div id="app-container" class="w-full max-w-7xl mx-auto relative">
+        
+        <div id="main-content">
+            <header class="flex justify-between items-center mb-10">
+                 <div class="flex items-center gap-4">
+                    <div class="p-2 bg-white/10 rounded-lg">
+                        <svg width="32" height="32" viewBox="0 0 108 94" fill="none" xmlns="http://www.w3.org/2000/svg" class="hidden sm:block">
+                            <path d="M1 93.5V31.8125L54 2.5L107 31.8125V93.5H1Z" stroke="#00d8ff" stroke-width="3"/>
+                            <path d="M27.5 78L54 93.5L80.5 78" stroke="#ff00ff" stroke-width="3"/>
+                            <path d="M27.5 31.5L54 47L80.5 31.5" stroke="#00d8ff" stroke-width="3"/>
+                            <path d="M54 93.5V47" stroke="#ff00ff" stroke-width="3"/>
+                            <path d="M1 31.5L27.5 47L1 62.5" stroke="#ff00ff" stroke-width="3"/>
+                            <path d="M107 31.5L80.5 47L107 62.5" stroke="#ff00ff" stroke-width="3"/>
+                            <path d="M27.5 47V78" stroke="#00d8ff" stroke-width="3"/>
+                            <path d="M80.5 47V78" stroke="#00d8ff" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-black text-glow">RETO CREATIVO</h1>
+                        <p class="text-sm text-gray-400">by Núcleo colectivo</p>
+                    </div>
+                </div>
+                 <div id="auth-status" class="text-right"></div>
+            </header>
+
+            <div id="initial-screen" class="text-center p-8 glass-card fade-in animate-bg">
+                <h2 class="text-5xl md:text-7xl font-black text-glow mb-4">Conexiones <span class="neon-accent">Creativas</span></h2>
+                <p class="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl mx-auto">Desata tu potencial con retos aleatorios e inspiración de IA para proyectos de impacto.</p>
+                <div id="play-button" class="btn btn-neon text-xl md:text-2xl px-16 py-5" style="animation: pulse 2s infinite ease-in-out;">
+                    🚀 COMENZAR
+                </div>
+            </div>
+
+            <div id="game-screen" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div id="concepto-card" class="glass-card text-center"><div class="flex items-center justify-center gap-4 mb-4 w-full"><div class="text-3xl">💡</div><h2 class="text-2xl font-bold uppercase tracking-wider">CONCEPTO</h2></div><p id="concepto-actual" class="text-xl md:text-2xl font-semibold flex-grow flex items-center justify-center"></p></div>
+                    <div id="accion-card" class="glass-card text-center"><div class="flex items-center justify-center gap-4 mb-4 w-full"><div class="text-3xl">⚡️</div><h2 class="text-2xl font-bold uppercase tracking-wider">ACCIÓN</h2></div><p id="accion-actual" class="text-xl md:text-2xl font-semibold flex-grow flex items-center justify-center"></p></div>
+                    <div id="desafio-card" class="glass-card text-center"><div class="flex items-center justify-center gap-4 mb-4 w-full"><div class="text-3xl">🎯</div><h2 class="text-2xl font-bold uppercase tracking-wider">DESAFÍO</h2></div><p id="desafio-actual" class="text-xl md:text-2xl font-semibold flex-grow flex items-center justify-center"></p></div>
+                    <div id="contexto-card" class="glass-card text-center"><div class="flex items-center justify-center gap-4 mb-4 w-full"><div class="text-3xl">🌍</div><h2 class="text-2xl font-bold uppercase tracking-wider">CONTEXTO</h2></div><p id="contexto-actual" class="text-xl md:text-2xl font-semibold flex-grow flex items-center justify-center"></p></div>
+                </div>
+                <div class="glass-card p-8 animate-bg">
+                    <h3 class="text-3xl font-black mb-4 flex items-center gap-3"><span class="text-3xl">🔥</span> TU RETO</h3>
+                    <p id="reto" class="text-xl leading-relaxed text-gray-300"></p>
+                </div>
+                 <div class="flex flex-col md:flex-row justify-center items-center gap-4 mt-8">
+                    <button id="standard-solution-button" class="btn btn-secondary text-white w-full md:w-auto">
+                        <span class="text-xl mr-2">🤔</span> VER SOLUCIÓN ESTÁNDAR
+                    </button>
+                    <button id="ai-solution-button" class="btn btn-neon w-full md:w-auto">
+                        <span class="btn-text">✨ GENERAR SOLUCIÓN CON IA</span>
+                        <span class="spinner-container"><div class="spinner"></div></span>
+                    </button>
+                 </div>
+                 <div class="text-center mt-6">
+                     <button id="new-combo-button-main" class="text-gray-400 hover:text-white transition underline">O generar otra combinación</button>
+                 </div>
+            </div>
+
+            <div id="solution-screen" class="hidden text-center p-8 glass-card animate-bg">
+                <h1 id="solution-title" class="text-5xl font-black text-glow mb-2">Solución Creativa</h1>
+                <p id="solution-subtitle" class="text-base neon-accent mb-10"></p>
+                <div id="solucion" class="text-lg leading-relaxed max-w-3xl mx-auto mb-12 text-left whitespace-pre-line text-gray-300 bg-black/20 p-8 rounded-lg"></div>
+                 <div class="flex justify-center items-center gap-4 mt-8">
+                    <button id="expand-ai-button" class="btn btn-neon">
+                        <span class="btn-text">🧠 EXPANDIR IDEA</span>
+                        <span class="spinner-container"><div class="spinner"></div></span>
+                    </button>
+                    <button id="new-combo-button-solution" class="btn btn-secondary text-white">
+                        <span class="text-xl mr-2">🔄</span> GENERAR NUEVO RETO
+                    </button>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        let app, auth, userId;
+        const authStatusEl = document.getElementById('auth-status');
+        
+        async function initializeFirebase() {
+            const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+            if (!firebaseConfigStr) { authStatusEl.innerHTML = `<p class="text-xs text-red-500">Configuración no encontrada.</p>`; return; }
+            
+            try {
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        authStatusEl.innerHTML = `<p class="text-xs text-[#00d8ff]">Conectado</p>`;
+                    } else { 
+                        userId = null; 
+                        authStatusEl.innerHTML = `<p class="text-xs text-yellow-500">Anónimo</p>`; 
+                    }
+                });
+                
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } else { await signInAnonymously(auth); }
+            } catch (error) {
+                console.error("Error al inicializar Firebase Auth:", error);
+                authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Auth</p>`;
+            }
+        }
+        
+        const soundManager = {
+            isReady: false,
+            synths: {},
+            
+            init() {
+                if (this.isReady || typeof Tone === 'undefined') {
+                    if (typeof Tone === 'undefined') console.error("Tone.js no está cargado.");
+                    return;
+                }
+                
+                this.synths.click = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 }
+                }).toDestination();
+
+                this.synths.whoosh = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.2, sustain: 0 }
+                }).toDestination();
+
+                this.synths.aiStart = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 }
+                }).toDestination();
+                
+                this.synths.success = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'fmtriangle', modulationType: 'sine', modulationIndex: 2, harmonicity: 1.01 },
+                     envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.8 }
+                }).toDestination();
+                
+                this.isReady = true;
+                console.log("Sound is ready.");
+            },
+            
+            async startAudioContext() {
+                if (this.isReady || typeof Tone === 'undefined') return;
+                await Tone.start();
+                this.init();
+            },
+            
+            playClick() { if (this.isReady) this.synths.click.triggerAttackRelease('C5', '8n'); },
+            playStartGame() { if (this.isReady) this.synths.success.triggerAttackRelease(['C4', 'E4', 'G4'], '0.5'); },
+            playNewCombination() { if (this.isReady) this.synths.whoosh.triggerAttack(); },
+            playAIStart() { if (this.isReady) this.synths.aiStart.triggerAttackRelease(['C3', 'E3', 'G3', 'C4'], '0.4'); },
+            playSolutionAppear() { if (this.isReady) this.synths.success.triggerAttackRelease('C5', '0.2'); }
+        };
+
+        const initialScreen = document.getElementById('initial-screen'), gameScreen = document.getElementById('game-screen'), solutionScreen = document.getElementById('solution-screen');
+        const playButton = document.getElementById('play-button'), newComboButtonMain = document.getElementById('new-combo-button-main'), newComboButtonSolution = document.getElementById('new-combo-button-solution');
+        const standardSolutionButton = document.getElementById('standard-solution-button'), aiSolutionButton = document.getElementById('ai-solution-button'), expandAiButton = document.getElementById('expand-ai-button');
+        const conceptoActualEl = document.getElementById('concepto-actual'), accionActualEl = document.getElementById('accion-actual'), desafioActualEl = document.getElementById('desafio-actual'), contextoActualEl = document.getElementById('contexto-actual');
+        const retoEl = document.getElementById('reto'), solucionEl = document.getElementById('solucion'), solutionTitleEl = document.getElementById('solution-title'), solutionSubtitleEl = document.getElementById('solution-subtitle');
+        
+        let currentChallenge = {};
+        const conceptos = ["Creatividad Colaborativa", "Innovación Social", "Conexión Comunitaria", "Inclusión Cultural", "Empoderamiento Colectivo", "Sostenibilidad Artesanal", "Intercambio de Saberes", "Arte y Tecnología", "Reciclaje Creativo", "Trabajo en Red", "Desarrollo Local", "Diversidad Cultural", "Arte Participativo", "Desafíos Ambientales", "Economía Solidaria", "Cultura Compartida", "Educación Alternativa", "Bienestar Comunitario", "Diseño Sostenible", "Tecnología Accesible"];
+        const acciones = ["Organizar Talleres Comunitarios", "Crear Espacios de Diálogo", "Implementar Soluciones Artesanales", "Fomentar el Uso de Materiales Reciclados", "Desarrollar Proyectos Colaborativos", "Realizar Exposiciones de Arte", "Promover la Educación en Habilidades Prácticas", "Facilitar el Intercambio Cultural", "Establecer Redes de Apoyo", "Desarrollar Plataformas de Participación", "Crear Iniciativas de Economía Circular", "Liderar Proyectos de Impacto Local", "Implementar Tecnologías Accesibles", "Organizar Ferias de Arte y Tecnología", "Fomentar la Participación en Eventos Comunitarios", "Desarrollar Modelos de Negocio Colaborativos", "Crear Espacios de Formación Continua", "Facilitar el Acceso a Recursos Artísticos"];
+        const desafios = ["Falta de Recursos", "Desinterés Comunitario", "Barrera Tecnológica", "Escasez de Materiales Reciclados", "Resistencia al Cambio", "Desigualdad en el Acceso", "Dificultades en la Comunicación", "Limitaciones Presupuestarias", "Descoordinación entre Actores", "Falta de Infraestructura", "Brechas en el Conocimiento", "Desafíos Logísticos", "Desconfianza en Nuevas Ideas", "Falta de Apoyo Institucional", "Problemas de Accesibilidad", "Desafíos Culturales", "Falta de Motivación", "Desafíos en la Sostenibilidad", "Conflictos de Interés", "Desigualdad Económica"];
+        const contextos = ["Centro Cultural", "Evento Comunitario", "Espacio de Coworking", "Taller de Arte", "Plataforma Digital", "Comunidad Rural", "Institución Educativa", "Festival Local", "Espacio de Innovación", "Centro de Formación", "Galería Comunitaria", "Espacio Público"];
+        
+        const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        
+        function toggleLoading(button, isLoading) {
+            button.disabled = isLoading;
+            button.classList.toggle('loading', isLoading);
+        }
+        
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); }
+                const data = await response.json();
+                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+                return "No se pudo generar una respuesta. Inténtalo de nuevo.";
+            } catch (error) {
+                console.error("Error llamando a la API de Gemini:", error);
+                return "Hubo un error al contactar la IA. Verifica la conexión o inténtalo más tarde.";
+            }
+        }
+        
+        function showSolutionScreen(isAI) {
+            solutionTitleEl.textContent = isAI ? 'Solución con IA' : 'Solución Sugerida';
+            solutionSubtitleEl.textContent = isAI ? 'Generado por IA de Gemini' : 'Una idea rápida para comenzar';
+            expandAiButton.style.display = isAI ? 'inline-flex' : 'none';
+            gameScreen.classList.add('hidden');
+            solutionScreen.classList.remove('hidden');
+            soundManager.playSolutionAppear();
+            animateCards();
+        }
+
+        function generateStandardSolution() {
+            soundManager.playClick();
+            const solucionEstandar = `1. **Análisis:** 🔍 Reúne a la comunidad en el ${currentChallenge.contexto} para discutir abiertamente sobre la ${currentChallenge.desafio}.\n2. **Ideación:** 💡 Usando el concepto de ${currentChallenge.concepto}, realiza una lluvia de ideas para encontrar formas de ${currentChallenge.accion}.\n3. **Acción:** 🚀 Lanza un pequeño proyecto piloto basado en la mejor idea, involucrando a voluntarios locales.`;
+            solucionEl.innerHTML = solucionEstandar.replace(/\n/g, '<br>');
+            currentChallenge.solucion = solucionEstandar;
+            showSolutionScreen(false);
+        }
+
+        async function generateSolutionWithAI() {
+            soundManager.playAIStart();
+            toggleLoading(aiSolutionButton, true);
+            const prompt = `Eres un experto en innovación social y creatividad para "Núcleo Colectivo". Tu tarea es proponer una solución creativa para el siguiente reto. Sé conciso pero inspirador. Reto: En un ${currentChallenge.contexto}, donde el desafío es la ${currentChallenge.desafio}, ¿cómo podrías ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}? Proporciona 3 pasos claros y accionables, usando markdown para negrillas y listas. Incluye emojis relevantes en cada paso.`;
+            const result = await callGeminiAPI(prompt);
+            solucionEl.innerHTML = result.replace(/\n/g, '<br>');
+            currentChallenge.solucion = result;
+            toggleLoading(aiSolutionButton, false);
+            showSolutionScreen(true);
+        }
+
+        async function expandSolutionWithAI() {
+            soundManager.playAIStart();
+            toggleLoading(expandAiButton, true);
+            const prompt = `Como estratega de "Núcleo Colectivo", toma la siguiente solución creativa y expándela en detalle. Para cada paso, describe la acción, sugiere posibles colaboradores o recursos, y menciona cómo medir el éxito. Usa markdown para formato y añade emojis para hacerla más visual. Solución: ${currentChallenge.solucion}`;
+            const result = await callGeminiAPI(prompt);
+            solucionEl.innerHTML = result.replace(/\n/g, '<br>');
+            currentChallenge.solucion = result;
+            toggleLoading(expandAiButton, false);
+        }
+
+        function generarNuevaCombinacion() {
+            currentChallenge.concepto = getRandomElement(conceptos);
+            currentChallenge.accion = getRandomElement(acciones);
+            currentChallenge.desafio = getRandomElement(desafios);
+            currentChallenge.contexto = getRandomElement(contextos);
+            currentChallenge.reto = `En un ${currentChallenge.contexto}, donde el desafío es la ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}. ¿Cómo lo harías?`;
+            
+            conceptoActualEl.textContent = currentChallenge.concepto;
+            accionActualEl.textContent = currentChallenge.accion;
+            desafioActualEl.textContent = currentChallenge.desafio;
+            contextoActualEl.textContent = currentChallenge.contexto;
+            retoEl.textContent = currentChallenge.reto;
+
+            soundManager.playNewCombination();
+            animateCards();
+        }
+        
+        function animateCards() {
+            const elementsToAnimate = document.querySelectorAll('.glass-card, .animate-bg');
+            elementsToAnimate.forEach((el, index) => {
+                el.style.animation = 'none';
+                requestAnimationFrame(() => {
+                    el.style.animation = `fadeIn 0.5s ease-out ${index * 0.1}s forwards`;
+                });
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+            
+            playButton.addEventListener('click', () => { 
+                soundManager.startAudioContext();
+                soundManager.playStartGame();
+                initialScreen.classList.add('hidden'); 
+                gameScreen.classList.remove('hidden'); 
+                gameScreen.classList.add('fade-in'); 
+                generarNuevaCombinacion(); 
+            });
+
+            const newCombinationHandler = () => { 
+                solutionScreen.classList.add('hidden'); 
+                gameScreen.classList.remove('hidden'); 
+                generarNuevaCombinacion(); 
+            };
+            
+            newComboButtonMain.addEventListener('click', newCombinationHandler);
+            newComboButtonSolution.addEventListener('click', newCombinationHandler);
+            
+            standardSolutionButton.addEventListener('click', generateStandardSolution);
+            aiSolutionButton.addEventListener('click', generateSolutionWithAI);
+            expandAiButton.addEventListener('click', expandSolutionWithAI);
+        });
+    </script>
+</body>
+</html>
