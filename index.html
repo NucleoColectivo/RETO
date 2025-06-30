@@ -162,6 +162,11 @@
                         <span class="spinner-container"><div class="spinner"></div></span>
                     </button>
                 </div>
+                <div class="text-center mt-8">
+                    <button id="new-combo-button-main" class="btn neon-button">
+                       <span class="btn-text">🔄 GENERAR NUEVO RETO</span>
+                   </button>
+               </div>
             </div>
 
             <div id="solution-screen" class="hidden text-center p-8 card">
@@ -187,35 +192,56 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         let app, auth, userId;
         const authStatusEl = document.getElementById('auth-status');
         
         async function initializeFirebase() {
             const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            if (!firebaseConfigStr) { 
-                authStatusEl.innerHTML = `<p class="text-xs text-yellow-500">Config de Firebase no encontrada. Usando modo anónimo.</p>`; 
-                const anonyAuth = getAuth();
-                if(anonyAuth){
-                    await signInAnonymously(anonyAuth);
+
+            if (!firebaseConfigStr) {
+                authStatusEl.innerHTML = `<p class="text-xs text-yellow-500 font-bold">Usando modo anónimo (sin config).</p>`;
+                console.warn("Firebase config not found, falling back to anonymous auth without app instance.");
+                // Intenta inicializar una instancia mínima para la autenticación anónima
+                try {
+                    const minimalApp = initializeApp({});
+                    auth = getAuth(minimalApp);
+                    await signInAnonymously(auth);
+                } catch(e) {
+                     auth = getAuth(); // Fallback si la inicialización vacía falla
+                     if (auth.currentUser === null) {
+                        await signInAnonymously(auth);
+                     }
                 }
                 return;
             }
+
             try {
                 const firebaseConfig = JSON.parse(firebaseConfigStr);
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
+                
                 onAuthStateChanged(auth, (user) => {
-                    if (user) { userId = user.uid; authStatusEl.innerHTML = `<p class="text-xs text-cyan-400">Conectado</p>`; } 
-                    else { userId = null; authStatusEl.innerHTML = `<p class="text-xs text-gray-500">Desconectado</p>`; }
+                    if (user) {
+                        userId = user.uid;
+                        authStatusEl.innerHTML = `<p class="text-xs text-cyan-400">Conectado</p>`;
+                    } else {
+                        userId = null;
+                        authStatusEl.innerHTML = `<p class="text-xs text-gray-500">Desconectado</p>`;
+                    }
                 });
+
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } 
-                else { await signInAnonymously(auth); }
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
             } catch (error) {
-                console.error("Error al inicializar Firebase Auth:", error);
-                authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Auth</p>`;
+                console.error("Error al inicializar o autenticar con Firebase:", error);
+                authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Firebase</p>`;
             }
         }
         
@@ -240,7 +266,8 @@
         const initialScreen = document.getElementById('initial-screen'), 
               gameScreen = document.getElementById('game-screen'), 
               solutionScreen = document.getElementById('solution-screen');
-        const playButton = document.getElementById('play-button'), 
+        const playButton = document.getElementById('play-button'),
+              newComboButtonMain = document.getElementById('new-combo-button-main'),
               newComboButtonSolution = document.getElementById('new-combo-button-solution');
         const standardSolutionButton = document.getElementById('standard-solution-button'), 
               aiSolutionButton = document.getElementById('ai-solution-button'), 
@@ -269,7 +296,8 @@
         }
         
         async function callGeminiAPI(prompt, jsonSchema = null) {
-            const apiKey = ""; 
+            const apiKey = ""; // La clave de API es gestionada por el entorno, se deja en blanco.
+
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             if (jsonSchema) {
@@ -285,10 +313,13 @@
                 if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
                     return data.candidates[0].content.parts[0].text;
                 }
-                return "No se pudo generar una respuesta. Inténtalo de nuevo.";
+                if (data.promptFeedback?.blockReason) {
+                    return `La solicitud fue bloqueada: ${data.promptFeedback.blockReason}`;
+                }
+                return "No se pudo generar una respuesta válida de la IA.";
             } catch (error) {
                 console.error("Error llamando a la API de Gemini:", error);
-                return "Hubo un error al contactar la IA. Verifica la conexión o inténtalo más tarde.";
+                return "Hubo un error al contactar la IA. Verifica la conexión o la clave de API.";
             }
         }
         
@@ -296,7 +327,7 @@
             solutionTitleEl.textContent = isAI ? 'Solución con IA' : 'Solución Sugerida';
             solutionSubtitleEl.textContent = isAI ? 'Generado por IA de Gemini' : 'Una idea rápida para comenzar';
             expandAiButton.style.display = isAI ? 'inline-flex' : 'none';
-            reimaginarRetoButton.style.display = isAI ? 'inline-flex' : 'none'; // Mostrar solo para soluciones AI
+            reimaginarRetoButton.style.display = isAI ? 'inline-flex' : 'none'; 
             gameScreen.classList.add('hidden');
             solutionScreen.classList.remove('hidden');
             solutionScreen.classList.add('fade-in');
@@ -349,6 +380,11 @@
 
             try {
                 const result = await callGeminiAPI(prompt, schema);
+                if (result.startsWith("Error:")) {
+                    alert(result);
+                    toggleLoading(reimaginarRetoButton, false);
+                    return;
+                }
                 const aiChallenge = JSON.parse(result);
                 updateChallengeUI(aiChallenge.concepto, aiChallenge.accion, aiChallenge.desafio, aiChallenge.contexto);
                 solutionScreen.classList.add('hidden');
@@ -408,6 +444,9 @@
                 soundManager.startAudioContext(); soundManager.playStartGame();
                 initialScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); 
                 gameScreen.classList.add('fade-in'); generarNuevaCombinacion(); 
+            });
+            newComboButtonMain.addEventListener('click', () => {
+                generarNuevaCombinacion();
             });
             newComboButtonSolution.addEventListener('click', () => {
                 solutionScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); 
