@@ -3,8 +3,8 @@
 <head>
     <!-- 
         Chosen Palette: Neon/Synthwave (Dark blue background with cyan and magenta glows)
-        Application Structure Plan: A three-stage, single-page application flow. 1) A "Start Screen" to introduce the game. 2) A "Game Screen" that displays the four challenge elements in a 2x2 responsive grid, with action buttons below. 3) A "Solution" area that is dynamically populated based on user choices. This structure directly mirrors the user journey described in the source document, making the flow intuitive and focused. The use of progressive disclosure (hiding solutions until requested) prevents information overload.
-        Visualization & Content Choices: Challenge elements are presented in styled HTML 'card' divs for clear visual separation. Solutions are dynamically generated text blocks. AI interaction is handled via button clicks that trigger JavaScript fetch calls to the Gemini API, with a loading spinner for user feedback. Sound effects are generated with Tone.js to create an immersive, digital-native experience without external assets, as requested in the source document.
+        Application Structure Plan: A three-stage, single-page application flow. 1) A "Start Screen" to introduce the game. 2) A "Game Screen" that displays the four challenge elements in a 2x2 responsive grid, with action buttons below. 3) A "Solution" area that is dynamically populated based on user choices. This structure directly mirrors the user journey described in the source document, making the flow intuitive and focused. The use of progressive disclosure (hiding solutions until requested) prevents information overload. Added a modal for saved challenges, accessible from the main view, and save buttons in the solution view, using localStorage for persistence.
+        Visualization & Content Choices: Challenge elements are presented in styled HTML 'card' divs for clear visual separation, now with a flip animation on generation. Solutions are dynamically generated text blocks. AI interaction is handled via button clicks that trigger JavaScript fetch calls to the Gemini API, with a loading spinner for user feedback. Sound effects are generated with Tone.js to create an immersive, digital-native experience without external assets, as requested in the source document.
         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
     -->
     <meta charset="UTF-8">
@@ -65,6 +65,30 @@
             border: 1px solid var(--glow-color);
             backdrop-filter: blur(10px);
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .card-flipper {
+            perspective: 1000px;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        @keyframes flip-in {
+            from { transform: rotateY(-90deg); opacity: 0; }
+            to { transform: rotateY(0deg); opacity: 1; }
+        }
+        .animate-flip-in {
+            animation: flip-in 0.6s ease-out forwards;
         }
         .loader {
             border: 4px solid #f3f3f3;
@@ -81,10 +105,32 @@
         .hidden {
             display: none;
         }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: #111827;
+            border: 2px solid var(--glow-color);
+            box-shadow: 0 0 20px var(--glow-color);
+            max-height: 80vh;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-4xl mx-auto">
+
+        <header class="absolute top-4 right-4 z-10">
+            <button id="show-saved-btn" class="neon-button py-2 px-4 rounded-lg">⭐ Guardados</button>
+        </header>
         
         <div id="start-screen" class="text-center">
             <h1 class="text-5xl md:text-7xl font-orbitron font-bold neon-text mb-4">RETO CREATIVO</h1>
@@ -100,6 +146,11 @@
             <div id="challenge-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             </div>
 
+            <div id="challenge-summary" class="card rounded-lg p-6 mb-8 hidden">
+                 <h3 class="text-xl font-orbitron font-bold mb-2 flex items-center justify-center gap-2" style="color: var(--glow-color);">🔥 Reto Sintetizado</h3>
+                 <p id="challenge-summary-text" class="text-center"></p>
+            </div>
+
             <div id="solution-choices" class="flex flex-col md:flex-row justify-center gap-4 mb-8">
                 <button id="standard-solution-btn" class="neon-button py-2 px-6 rounded-md">Ver Solución Estándar</button>
                 <button id="ai-solution-btn" class="neon-button-secondary py-2 px-6 rounded-md">🧠 Generar Solución con IA</button>
@@ -112,7 +163,8 @@
 
             <div id="solution-display" class="card rounded-lg p-6 hidden">
                 <h3 id="solution-title" class="text-2xl font-orbitron font-bold mb-4"></h3>
-                <div id="solution-content" class="text-gray-300 prose prose-invert max-w-none"></div>
+                <div id="solution-content" class="text-gray-300 prose prose-invert max-w-none mb-4"></div>
+                <button id="save-challenge-btn" class="neon-button mt-4 self-center">💾 Guardar Reto</button>
             </div>
 
             <div id="expand-section" class="text-center mt-6 hidden">
@@ -126,83 +178,46 @@
         </div>
     </div>
 
+    <div id="saved-challenges-modal" class="modal-overlay hidden">
+        <div class="modal-content rounded-lg p-6 w-11/12 max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-orbitron neon-text">Retos Guardados</h2>
+                <button id="close-modal-btn" class="text-2xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="saved-list" class="overflow-y-auto max-h-[60vh]"></div>
+        </div>
+    </div>
+
+
     <script type="module">
         let audioReady = false;
 
-        const clickSynth = new Tone.Synth({
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-        }).toDestination();
+        const clickSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+        const startSynth = new Tone.FMSynth({ harmonicity: 3, modulationIndex: 10, envelope: { attack: 0.2, decay: 0.5, sustain: 0, release: 0.8 } }).toDestination();
+        const aiSynth = new Tone.AMSynth({ harmonicity: 1.5, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.5 }, modulation: { type: 'sine' }, modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0, release: 0.5 } }).toDestination();
+        const successSynth = new Tone.PolySynth(Tone.Synth, { envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
 
-        const startSynth = new Tone.FMSynth({
-            harmonicity: 3,
-            modulationIndex: 10,
-            envelope: { attack: 0.2, decay: 0.5, sustain: 0, release: 0.8 }
-        }).toDestination();
+        function playClickSound() { if (!audioReady) return; clickSynth.triggerAttackRelease('C5', '8n'); }
+        function playStartSound() { if (!audioReady) return; startSynth.triggerAttackRelease('C3', '2n'); }
+        function playAISound() { if (!audioReady) return; aiSynth.triggerAttackRelease('A2', '1n'); }
+        function playSuccessSound() { if (!audioReady) return; successSynth.triggerAttackRelease(['C4', 'E4', 'G4'], '4n'); }
 
-        const aiSynth = new Tone.AMSynth({
-             harmonicity: 1.5,
-             envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.5 },
-             modulation: { type: 'sine' },
-             modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0, release: 0.5 }
-        }).toDestination();
+        async function initializeAudio() { if (!audioReady) { await Tone.start(); audioReady = true; console.log("Audio context started."); } }
+
+        const conceptos = ["Sostenibilidad Artesanal", "Innovación Social Digital", "Educación Inmersiva", "Salud Comunitaria Preventiva", "Cultura Urbana Regenerativa", "Turismo Experiencial Local", "Memoria Histórica Digital", "Economía Circular Textil", "Gamificación para el Cambio Social", "Arte y Neurociencia", "Diseño Biofílico Urbano", "Soberanía Alimentaria Tecnológica"];
+        const acciones = ["Organizar Talleres Comunitarios", "Desarrollar una Plataforma Digital", "Crear una Instalación de Arte Público", "Lanzar una Campaña de Concienciación", "Diseñar un Programa de Voluntariado", "Producir un Documental Interactivo", "Crear un Laboratorio Ciudadano", "Establecer una Red de Trueque", "Lanzar un Podcast Colaborativo", "Diseñar una Experiencia de Realidad Aumentada", "Publicar un Fanzine Colectivo", "Mapear Activos Comunitarios"];
+        const desafios = ["Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo", "Gentrificación Cultural", "Brecha Generacional", "Desinformación y Noticias Falsas", "Apatía Política", "Saturación del Mercado", "Vandalismo y Falta de Cuidado"];
+        const contextos = ["una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido", "una Biblioteca Pública", "un Barrio Histórico en Transformación", "una Plataforma de Streaming", "un Festival de Música Independiente", "un Hospital Público", "una Antigua Zona Industrial"];
         
-        const successSynth = new Tone.PolySynth(Tone.Synth, {
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 }
-        }).toDestination();
-
-
-        function playClickSound() {
-            if (!audioReady) return;
-            clickSynth.triggerAttackRelease('C5', '8n');
-        }
-
-        function playStartSound() {
-            if (!audioReady) return;
-            startSynth.triggerAttackRelease('C3', '2n');
-        }
-        
-        function playAISound() {
-            if (!audioReady) return;
-            aiSynth.triggerAttackRelease('A2', '1n');
-        }
-        
-        function playSuccessSound() {
-            if (!audioReady) return;
-            successSynth.triggerAttackRelease(['C4', 'E4', 'G4'], '4n');
-        }
-
-        async function initializeAudio() {
-            if (!audioReady) {
-                await Tone.start();
-                audioReady = true;
-                console.log("Audio context started.");
-            }
-        }
-
-        const conceptos = ["Sostenibilidad Artesanal", "Innovación Social Digital", "Educación Inmersiva", "Salud Comunitaria Preventiva", "Cultura Urbana Regenerativa", "Turismo Experiencial Local"];
-        const acciones = ["Organizar Talleres Comunitarios", "Desarrollar una Plataforma Digital", "Crear una Instalación de Arte Público", "Lanzar una Campaña de Concienciación", "Diseñar un Programa de Voluntariado", "Producir un Documental Interactivo"];
-        const desafios = ["Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo"];
-        const contextos = ["una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido"];
-        
-        const emojis = {
-            CONCEPTO: "💡",
-            ACCIÓN: "🛠️",
-            DESAFÍO: "🔥",
-            CONTEXTO: "🌍"
-        };
-        
-        const colors = {
-            CONCEPTO: "#39a7ff", 
-            ACCIÓN: "#ff5733",
-            DESAFÍO: "#ff1744",
-            CONTEXTO: "#32cd32"
-        };
+        const emojis = { CONCEPTO: "💡", ACCIÓN: "🛠️", DESAFÍO: "🔥", CONTEXTO: "🌍" };
+        const colors = { CONCEPTO: "#39a7ff", ACCIÓN: "#ff5733", DESAFÍO: "#ff1744", CONTEXTO: "#32cd32" };
 
         const startScreen = document.getElementById('start-screen');
         const gameScreen = document.getElementById('game-screen');
         const startButton = document.getElementById('start-button');
         const challengeContainer = document.getElementById('challenge-container');
+        const challengeSummary = document.getElementById('challenge-summary');
+        const challengeSummaryText = document.getElementById('challenge-summary-text');
         const solutionChoices = document.getElementById('solution-choices');
         const standardSolutionBtn = document.getElementById('standard-solution-btn');
         const aiSolutionBtn = document.getElementById('ai-solution-btn');
@@ -213,61 +228,75 @@
         const expandSection = document.getElementById('expand-section');
         const expandIdeaBtn = document.getElementById('expand-idea-btn');
         const resetButton = document.getElementById('reset-button');
+        const saveChallengeBtn = document.getElementById('save-challenge-btn');
+        const showSavedBtn = document.getElementById('show-saved-btn');
+        const savedChallengesModal = document.getElementById('saved-challenges-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const savedList = document.getElementById('saved-list');
 
         let currentChallenge = {};
+        let currentSolution = "";
         let currentAiSolution = "";
 
-        startButton.addEventListener('click', async () => {
-            await initializeAudio();
-            playStartSound();
-            startScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            resetButton.classList.remove('hidden');
-            generateChallenge();
-        });
+        startButton.addEventListener('click', async () => { await initializeAudio(); playStartSound(); startScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); resetButton.classList.remove('hidden'); generateChallenge(); });
         
-        resetButton.addEventListener('click', () => {
-             playClickSound();
-             generateChallenge();
-             solutionDisplay.classList.add('hidden');
-             solutionChoices.classList.remove('hidden');
-             expandSection.classList.add('hidden');
-             currentAiSolution = "";
-             solutionContent.innerHTML = "";
-        });
+        resetButton.addEventListener('click', () => { playClickSound(); generateChallenge(); });
 
         function generateChallenge() {
-            challengeContainer.innerHTML = '';
+            solutionDisplay.classList.add('hidden');
+            solutionChoices.classList.remove('hidden');
+            expandSection.classList.add('hidden');
+            challengeSummary.classList.add('hidden');
+            currentAiSolution = "";
+            currentSolution = "";
+            solutionContent.innerHTML = "";
             
-            currentChallenge = {
-                concepto: conceptos[Math.floor(Math.random() * conceptos.length)],
-                accion: acciones[Math.floor(Math.random() * acciones.length)],
-                desafio: desafios[Math.floor(Math.random() * desafios.length)],
-                contexto: contextos[Math.floor(Math.random() * contextos.length)]
-            };
-            
-            displayCard("CONCEPTO", currentChallenge.concepto);
-            displayCard("ACCIÓN", currentChallenge.accion);
-            displayCard("DESAFÍO", currentChallenge.desafio);
-            displayCard("CONTEXTO", currentChallenge.contexto);
+            const cards = challengeContainer.querySelectorAll('.card-flipper');
+            cards.forEach(card => card.classList.add('is-flipped'));
+
+            setTimeout(() => {
+                challengeContainer.innerHTML = '';
+                currentChallenge = {
+                    id: Date.now(),
+                    concepto: conceptos[Math.floor(Math.random() * conceptos.length)],
+                    accion: acciones[Math.floor(Math.random() * acciones.length)],
+                    desafio: desafios[Math.floor(Math.random() * desafios.length)],
+                    contexto: contextos[Math.floor(Math.random() * contextos.length)]
+                };
+                
+                const summaryText = `En ${currentChallenge.contexto}, donde el desafío es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}.`;
+                challengeSummaryText.textContent = summaryText;
+
+                displayCard("CONCEPTO", currentChallenge.concepto, 0);
+                displayCard("ACCIÓN", currentChallenge.accion, 1);
+                displayCard("DESAFÍO", currentChallenge.desafio, 2);
+                displayCard("CONTEXTO", currentChallenge.contexto, 3);
+                
+                challengeSummary.classList.remove('hidden');
+            }, 300);
         }
 
-        function displayCard(title, text) {
+        function displayCard(title, text, index) {
+            const cardFlipper = document.createElement('div');
+            cardFlipper.className = 'card-flipper';
+            
             const card = document.createElement('div');
-            card.className = 'card rounded-lg p-4 flex flex-col items-center text-center';
+            card.className = 'card rounded-lg p-4 flex flex-col items-center text-center h-48 animate-flip-in';
             card.style.borderColor = colors[title];
+            card.style.animationDelay = `${index * 100}ms`;
             card.innerHTML = `
                 <h3 class="text-xl font-orbitron font-bold mb-2" style="color: ${colors[title]};">${emojis[title]} ${title}</h3>
-                <p class="text-gray-300">${text}</p>
+                <p class="text-gray-300 flex-grow flex items-center justify-center">${text}</p>
             `;
-            challengeContainer.appendChild(card);
+            cardFlipper.appendChild(card);
+            challengeContainer.appendChild(cardFlipper);
         }
         
         standardSolutionBtn.addEventListener('click', () => {
             playClickSound();
             expandSection.classList.add('hidden');
             solutionTitle.textContent = "Solución Estándar";
-            solutionContent.innerHTML = `
+            currentSolution = `
                 <p>Este es un punto de partida estructurado basado en tu reto:</p>
                 <ul class="list-disc list-inside mt-2">
                     <li><strong>Fase 1: Investigación.</strong> Analizar a fondo ${currentChallenge.contexto} y las causas del ${currentChallenge.desafio}.</li>
@@ -276,79 +305,39 @@
                     <li><strong>Fase 4: Búsqueda de Fondos.</strong> Con los resultados del prototipo, presentar el proyecto a ONGs, gobierno local o plataformas de crowdfunding.</li>
                 </ul>
             `;
+            solutionContent.innerHTML = currentSolution;
             solutionDisplay.classList.remove('hidden');
             solutionChoices.classList.add('hidden');
+            saveChallengeBtn.classList.remove('hidden');
         });
 
-        aiSolutionBtn.addEventListener('click', async () => {
-            handleAiInteraction(false);
-        });
-
-        expandIdeaBtn.addEventListener('click', async () => {
-            handleAiInteraction(true);
-        });
+        aiSolutionBtn.addEventListener('click', () => handleAiInteraction(false));
+        expandIdeaBtn.addEventListener('click', () => handleAiInteraction(true));
 
         async function handleAiInteraction(isExpanding) {
             playAISound();
             loadingIndicator.classList.remove('hidden');
-            
-            if(isExpanding) {
-                expandSection.classList.add('hidden');
-            } else {
-                solutionChoices.classList.add('hidden');
-                solutionDisplay.classList.add('hidden');
-            }
+            if(isExpanding) { expandSection.classList.add('hidden'); } 
+            else { solutionChoices.classList.add('hidden'); solutionDisplay.classList.add('hidden'); }
 
             const prompt = isExpanding 
-                ? `Eres un estratega de proyectos para Núcleo Colectivo. Toma la siguiente idea y expándela.
-                
-                  Reto Original:
-                  - Concepto: ${currentChallenge.concepto}
-                  - Acción: ${currentChallenge.accion}
-                  - Desafío: ${currentChallenge.desafio}
-                  - Contexto: ${currentChallenge.contexto}
-                  
-                  Solución Inicial de IA: "${currentAiSolution}"
-
-                  Tu tarea es desarrollar esta idea con mayor profundidad. Responde usando Markdown y emojis. Cubre los siguientes puntos:
-                  1.  **Posibles Colaboradores:** ¿Qué perfiles o entidades serían clave?
-                  2.  **Recursos Necesarios:** ¿Qué se necesita para empezar?
-                  3.  **Métricas de Éxito:** ¿Cómo se mediría el impacto?`
-                : `Eres un experto en innovación para Núcleo Colectivo. Genera una solución creativa, concisa e inspiradora para el siguiente reto:
-                
-                   - Concepto Guía: ${currentChallenge.concepto}
-                   - Acción Principal: ${currentChallenge.accion}
-                   - Desafío a Superar: ${currentChallenge.desafio}
-                   - Contexto Específico: ${currentChallenge.contexto}
-
-                   Genera la idea en un párrafo.`;
+                ? `Eres un estratega de proyectos para Núcleo Colectivo. Toma la siguiente idea y expándela. Reto Original: Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}, Contexto: ${currentChallenge.contexto}. Solución Inicial de IA: "${currentAiSolution}". Tu tarea es desarrollar esta idea con mayor profundidad. Responde usando Markdown y emojis. Cubre los siguientes puntos: 1. **Posibles Colaboradores:** 2. **Recursos Necesarios:** 3. **Métricas de Éxito:**`
+                : `Eres un experto en innovación para Núcleo Colectivo. Genera una solución creativa, concisa e inspiradora para el siguiente reto: Concepto Guía: ${currentChallenge.concepto}, Acción Principal: ${currentChallenge.accion}, Desafío a Superar: ${currentChallenge.desafio}, Contexto Específico: ${currentChallenge.contexto}. Genera la idea en un párrafo.`;
             
             try {
                 const resultText = await callGeminiAPI(prompt);
-                
-                if (!isExpanding) {
-                    currentAiSolution = resultText;
-                }
-
+                if (!isExpanding) { currentAiSolution = resultText; }
+                currentSolution = resultText;
                 solutionTitle.textContent = isExpanding ? "🚀 Idea Expandida por IA" : "🧠 Solución Generada por IA";
                 
-                let htmlResult = resultText
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\n\s*-\s/g, '</li><li class="mt-1">')
-                    .replace(/\n\s*\d\.\s/g, '</li><li class="mt-1">')
-                    .replace(/\n/g, '<br>');
-
-                if(htmlResult.includes('</li><li')){
-                    htmlResult = '<ul class="list-none">' + htmlResult + '</ul>'.replace('<ul></li>','<ul>');
-                }
+                let htmlResult = resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\s*(-\s|\d\.\s)/g, '</li><li class="mt-1">').replace(/\n/g, '<br>');
+                if(htmlResult.includes('</li><li')){ htmlResult = '<ul class="list-none pl-4">' + htmlResult.substring(5) + '</ul>'; }
                 
                 solutionContent.innerHTML = htmlResult;
-                
                 playSuccessSound();
                 solutionDisplay.classList.remove('hidden');
-                if(!isExpanding) {
-                   expandSection.classList.remove('hidden');
-                }
+                saveChallengeBtn.classList.remove('hidden');
+                if(!isExpanding) { expandSection.classList.remove('hidden'); }
 
             } catch (error) {
                 console.error("Error calling Gemini API:", error);
@@ -363,33 +352,72 @@
         async function callGeminiAPI(prompt) {
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }]
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error(`API call failed with status: ${response.status}`);
-            }
-
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+            if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
             const result = await response.json();
-            
-            if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                console.error("Unexpected API response structure:", result);
-                if (result.promptFeedback?.blockReason) {
-                    throw new Error(`Prompt was blocked: ${result.promptFeedback.blockReason}`);
-                }
-                throw new Error('No content received from API.');
-            }
+            if (result.candidates?.[0]?.content?.parts?.[0]?.text) { return result.candidates[0].content.parts[0].text; }
+            else { throw new Error(result.promptFeedback?.blockReason ? `Prompt was blocked: ${result.promptFeedback.blockReason}` : 'No content received from API.'); }
         }
+
+        function getSavedChallenges() { return JSON.parse(localStorage.getItem('savedChallenges')) || []; }
+        function saveChallenges(challenges) { localStorage.setItem('savedChallenges', JSON.stringify(challenges)); }
+
+        saveChallengeBtn.addEventListener('click', () => {
+            const challenges = getSavedChallenges();
+            const challengeToSave = { ...currentChallenge, solution: currentSolution, isAI: !!currentAiSolution };
+            if (!challenges.find(c => c.id === challengeToSave.id)) {
+                challenges.push(challengeToSave);
+                saveChallenges(challenges);
+                saveChallengeBtn.textContent = "¡Guardado!";
+                setTimeout(() => { saveChallengeBtn.textContent = "💾 Guardar Reto"; }, 1500);
+            } else {
+                saveChallengeBtn.textContent = "¡Ya está guardado!";
+                 setTimeout(() => { saveChallengeBtn.textContent = "💾 Guardar Reto"; }, 1500);
+            }
+        });
+
+        showSavedBtn.addEventListener('click', () => {
+            const challenges = getSavedChallenges();
+            savedList.innerHTML = '';
+            if (challenges.length === 0) {
+                savedList.innerHTML = '<p class="text-gray-400">No tienes retos guardados todavía.</p>';
+            } else {
+                challenges.forEach((challenge, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border border-cyan-700 rounded-lg mb-2 cursor-pointer hover:bg-cyan-900/50';
+                    item.innerHTML = `<h4 class="font-bold">${challenge.concepto}</h4><p class="text-sm text-gray-400">${challenge.accion}</p>`;
+                    item.addEventListener('click', () => {
+                        loadChallenge(challenge);
+                        savedChallengesModal.classList.add('hidden');
+                    });
+                    savedList.appendChild(item);
+                });
+            }
+            savedChallengesModal.classList.remove('hidden');
+        });
+
+        function loadChallenge(challenge) {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            challengeContainer.innerHTML = '';
+            currentChallenge = challenge;
+            const summaryText = `En ${currentChallenge.contexto}, donde el desafío es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}.`;
+            challengeSummaryText.textContent = summaryText;
+            challengeSummary.classList.remove('hidden');
+            displayCard("CONCEPTO", challenge.concepto, 0);
+            displayCard("ACCIÓN", challenge.accion, 1);
+            displayCard("DESAFÍO", challenge.desafio, 2);
+            displayCard("CONTEXTO", challenge.contexto, 3);
+            solutionChoices.classList.add('hidden');
+            expandSection.classList.add('hidden');
+            solutionTitle.textContent = challenge.isAI ? "🧠 Solución Guardada (IA)" : "Solución Guardada";
+            solutionContent.innerHTML = challenge.solution;
+            solutionDisplay.classList.remove('hidden');
+            saveChallengeBtn.classList.remove('hidden');
+        }
+
+        closeModalBtn.addEventListener('click', () => savedChallengesModal.classList.add('hidden'));
+
     </script>
 </body>
 </html>
