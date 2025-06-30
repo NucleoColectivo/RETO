@@ -198,22 +198,19 @@
         const authStatusEl = document.getElementById('auth-status');
         
         async function initializeFirebase() {
+            // Este código está diseñado para funcionar en un entorno que inyecta la configuración.
+            // Para despliegue externo, necesitarás reemplazar esto con tu configuración manual.
             const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
 
             if (!firebaseConfigStr) {
-                authStatusEl.innerHTML = `<p class="text-xs text-yellow-500 font-bold">Usando modo anónimo (sin config).</p>`;
-                console.warn("Firebase config not found, falling back to anonymous auth without app instance.");
-                // Intenta inicializar una instancia mínima para la autenticación anónima
-                try {
-                    const minimalApp = initializeApp({});
-                    auth = getAuth(minimalApp);
-                    await signInAnonymously(auth);
-                } catch(e) {
-                     auth = getAuth(); // Fallback si la inicialización vacía falla
-                     if (auth.currentUser === null) {
-                        await signInAnonymously(auth);
-                     }
-                }
+                authStatusEl.innerHTML = `<p class="text-xs text-red-500 font-bold">¡Config de Firebase no encontrada!</p>`;
+                console.error("Firebase config variable (__firebase_config) not found. This app requires a Firebase configuration to be provided by the environment.");
+                // Deshabilitar botones que dependen de la IA
+                document.querySelectorAll('.neon-button-secondary').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = 0.5;
+                    btn.style.cursor = 'not-allowed';
+                });
                 return;
             }
 
@@ -296,7 +293,8 @@
         }
         
         async function callGeminiAPI(prompt, jsonSchema = null) {
-            const apiKey = ""; // La clave de API es gestionada por el entorno, se deja en blanco.
+            // La clave de API es gestionada por el entorno, se deja en blanco.
+            const apiKey = ""; 
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
@@ -308,13 +306,17 @@
             }
             try {
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); }
+                if (!response.ok) { 
+                    const errorBody = await response.text();
+                    console.error("API Error Response:", errorBody);
+                    throw new Error(`La solicitud a la API falló con estado ${response.status}`); 
+                }
                 const data = await response.json();
                 if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
                     return data.candidates[0].content.parts[0].text;
                 }
                 if (data.promptFeedback?.blockReason) {
-                    return `La solicitud fue bloqueada: ${data.promptFeedback.blockReason}`;
+                    return `La solicitud fue bloqueada por seguridad: ${data.promptFeedback.blockReason}`;
                 }
                 return "No se pudo generar una respuesta válida de la IA.";
             } catch (error) {
@@ -380,7 +382,7 @@
 
             try {
                 const result = await callGeminiAPI(prompt, schema);
-                if (result.startsWith("Error:")) {
+                if (result.startsWith("Error:") || result.startsWith("La solicitud fue bloqueada")) {
                     alert(result);
                     toggleLoading(reimaginarRetoButton, false);
                     return;
@@ -393,7 +395,7 @@
                 soundManager.playSolutionAppear();
             } catch (error) {
                 console.error("Error al reimaginar reto con IA:", error);
-                alert("No se pudo generar el reto con IA. Intenta de nuevo.");
+                alert("No se pudo generar el reto con IA. El formato de la respuesta no fue el esperado.");
             } finally {
                 toggleLoading(reimaginarRetoButton, false);
             }
