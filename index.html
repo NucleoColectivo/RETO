@@ -123,6 +123,35 @@
             box-shadow: 0 0 20px var(--glow-color);
             max-height: 80vh;
         }
+        .btn {
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: none;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn.loading .spinner-container {
+            opacity: 1;
+        }
+        .btn .spinner-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -141,6 +170,7 @@
         </div>
 
         <div id="game-screen" class="hidden">
+            <div id="auth-status" class="text-right mb-4"></div>
             <h2 class="text-4xl font-orbitron font-bold text-center mb-6" style="color: var(--glow-color); text-shadow: 0 0 10px var(--glow-color);">Tu Reto</h2>
             
             <div id="challenge-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -153,7 +183,10 @@
 
             <div id="solution-choices" class="flex flex-col md:flex-row justify-center gap-4 mb-8">
                 <button id="standard-solution-btn" class="neon-button py-2 px-6 rounded-md">Ver Solución Estándar</button>
-                <button id="ai-solution-btn" class="neon-button-secondary py-2 px-6 rounded-md">🧠 Generar Solución con IA</button>
+                <button id="ai-solution-btn" class="neon-button-secondary py-2 px-6 rounded-md btn">
+                    <span class="btn-text">🧠 Generar Solución con IA</span>
+                    <span class="spinner-container"><div class="loader"></div></span>
+                </button>
             </div>
             
             <div id="loading-indicator" class="hidden flex-col items-center justify-center my-8">
@@ -164,11 +197,17 @@
             <div id="solution-display" class="card rounded-lg p-6 hidden">
                 <h3 id="solution-title" class="text-2xl font-orbitron font-bold mb-4"></h3>
                 <div id="solution-content" class="text-gray-300 prose prose-invert max-w-none mb-4"></div>
-                <button id="save-challenge-btn" class="neon-button mt-4 self-center">💾 Guardar Reto</button>
-            </div>
-
-            <div id="expand-section" class="text-center mt-6 hidden">
-                 <button id="expand-idea-btn" class="neon-button-secondary py-2 px-6 rounded-md">🚀 Expandir Idea con IA</button>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
+                    <button id="save-challenge-btn" class="neon-button">💾 Guardar Reto</button>
+                    <button id="expand-idea-btn" class="neon-button-secondary btn">
+                       <span class="btn-text">🚀 Expandir Idea con IA</span>
+                       <span class="spinner-container"><div class="loader"></div></span>
+                    </button>
+                    <button id="reimaginar-reto-btn" class="neon-button-secondary btn">
+                       <span class="btn-text">🤖 Reimaginar Reto con IA</span>
+                       <span class="spinner-container"><div class="loader"></div></span>
+                    </button>
+                </div>
             </div>
 
             <div class="text-center mt-8">
@@ -190,8 +229,41 @@
 
 
     <script type="module">
-        let audioReady = false;
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        let app, auth, userId;
+        const authStatusEl = document.getElementById('auth-status');
+
+        async function initializeFirebase() {
+            const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+            if (!firebaseConfigStr) {
+                authStatusEl.innerHTML = `<p class="text-xs text-red-500 font-bold">¡Config de Firebase no encontrada!</p>`;
+                console.error("Firebase config variable (__firebase_config) not found.");
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) { userId = user.uid; authStatusEl.innerHTML = `<p class="text-xs text-cyan-400">Conectado</p>`; } 
+                    else { userId = null; authStatusEl.innerHTML = `<p class="text-xs text-gray-500">Desconectado</p>`; }
+                });
+
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } 
+                else { await signInAnonymously(auth); }
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Firebase</p>`;
+            }
+        }
+        
+        let audioReady = false;
         const clickSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
         const startSynth = new Tone.FMSynth({ harmonicity: 3, modulationIndex: 10, envelope: { attack: 0.2, decay: 0.5, sustain: 0, release: 0.8 } }).toDestination();
         const aiSynth = new Tone.AMSynth({ harmonicity: 1.5, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.5 }, modulation: { type: 'sine' }, modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0, release: 0.5 } }).toDestination();
@@ -225,8 +297,8 @@
         const solutionDisplay = document.getElementById('solution-display');
         const solutionTitle = document.getElementById('solution-title');
         const solutionContent = document.getElementById('solution-content');
-        const expandSection = document.getElementById('expand-section');
         const expandIdeaBtn = document.getElementById('expand-idea-btn');
+        const reimaginarRetoBtn = document.getElementById('reimaginar-reto-btn');
         const resetButton = document.getElementById('reset-button');
         const saveChallengeBtn = document.getElementById('save-challenge-btn');
         const showSavedBtn = document.getElementById('show-saved-btn');
@@ -238,50 +310,50 @@
         let currentSolution = "";
         let currentAiSolution = "";
 
+        function toggleLoading(button, isLoading) {
+            if (button) {
+                button.disabled = isLoading;
+                button.classList.toggle('loading', isLoading);
+            }
+        }
+
         startButton.addEventListener('click', async () => { await initializeAudio(); playStartSound(); startScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); resetButton.classList.remove('hidden'); generateChallenge(); });
-        
         resetButton.addEventListener('click', () => { playClickSound(); generateChallenge(); });
 
         function generateChallenge() {
             solutionDisplay.classList.add('hidden');
             solutionChoices.classList.remove('hidden');
-            expandSection.classList.add('hidden');
             challengeSummary.classList.add('hidden');
             currentAiSolution = "";
             currentSolution = "";
             solutionContent.innerHTML = "";
             
-            const cards = challengeContainer.querySelectorAll('.card-flipper');
-            cards.forEach(card => card.classList.add('is-flipped'));
+            challengeContainer.innerHTML = '';
+            currentChallenge = {
+                id: Date.now(),
+                concepto: conceptos[Math.floor(Math.random() * conceptos.length)],
+                accion: acciones[Math.floor(Math.random() * acciones.length)],
+                desafio: desafios[Math.floor(Math.random() * desafios.length)],
+                contexto: contextos[Math.floor(Math.random() * contextos.length)]
+            };
+            
+            const summaryText = `En ${currentChallenge.contexto}, donde el desafío es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}.`;
+            challengeSummaryText.textContent = summaryText;
 
-            setTimeout(() => {
-                challengeContainer.innerHTML = '';
-                currentChallenge = {
-                    id: Date.now(),
-                    concepto: conceptos[Math.floor(Math.random() * conceptos.length)],
-                    accion: acciones[Math.floor(Math.random() * acciones.length)],
-                    desafio: desafios[Math.floor(Math.random() * desafios.length)],
-                    contexto: contextos[Math.floor(Math.random() * contextos.length)]
-                };
-                
-                const summaryText = `En ${currentChallenge.contexto}, donde el desafío es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}.`;
-                challengeSummaryText.textContent = summaryText;
-
-                displayCard("CONCEPTO", currentChallenge.concepto, 0);
-                displayCard("ACCIÓN", currentChallenge.accion, 1);
-                displayCard("DESAFÍO", currentChallenge.desafio, 2);
-                displayCard("CONTEXTO", currentChallenge.contexto, 3);
-                
-                challengeSummary.classList.remove('hidden');
-            }, 300);
+            displayCard("CONCEPTO", currentChallenge.concepto, 0);
+            displayCard("ACCIÓN", currentChallenge.accion, 1);
+            displayCard("DESAFÍO", currentChallenge.desafio, 2);
+            displayCard("CONTEXTO", currentChallenge.contexto, 3);
+            
+            challengeSummary.classList.remove('hidden');
         }
 
         function displayCard(title, text, index) {
             const cardFlipper = document.createElement('div');
-            cardFlipper.className = 'card-flipper';
+            cardFlipper.className = 'card-flipper h-48';
             
             const card = document.createElement('div');
-            card.className = 'card rounded-lg p-4 flex flex-col items-center text-center h-48 animate-flip-in';
+            card.className = 'card rounded-lg p-4 flex flex-col items-center text-center h-full animate-flip-in';
             card.style.borderColor = colors[title];
             card.style.animationDelay = `${index * 100}ms`;
             card.innerHTML = `
@@ -294,7 +366,6 @@
         
         standardSolutionBtn.addEventListener('click', () => {
             playClickSound();
-            expandSection.classList.add('hidden');
             solutionTitle.textContent = "Solución Estándar";
             currentSolution = `
                 <p>Este es un punto de partida estructurado basado en tu reto:</p>
@@ -308,51 +379,107 @@
             solutionContent.innerHTML = currentSolution;
             solutionDisplay.classList.remove('hidden');
             solutionChoices.classList.add('hidden');
-            saveChallengeBtn.classList.remove('hidden');
+            expandIdeaBtn.classList.add('hidden');
+            reimaginarRetoBtn.classList.add('hidden');
         });
 
-        aiSolutionBtn.addEventListener('click', () => handleAiInteraction(false));
-        expandIdeaBtn.addEventListener('click', () => handleAiInteraction(true));
-
-        async function handleAiInteraction(isExpanding) {
+        aiSolutionBtn.addEventListener('click', async () => {
             playAISound();
+            toggleLoading(aiSolutionBtn, true);
+            solutionChoices.classList.add('hidden');
             loadingIndicator.classList.remove('hidden');
-            if(isExpanding) { expandSection.classList.add('hidden'); } 
-            else { solutionChoices.classList.add('hidden'); solutionDisplay.classList.add('hidden'); }
-
-            const prompt = isExpanding 
-                ? `Eres un estratega de proyectos para Núcleo Colectivo. Toma la siguiente idea y expándela. Reto Original: Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}, Contexto: ${currentChallenge.contexto}. Solución Inicial de IA: "${currentAiSolution}". Tu tarea es desarrollar esta idea con mayor profundidad. Responde usando Markdown y emojis. Cubre los siguientes puntos: 1. **Posibles Colaboradores:** 2. **Recursos Necesarios:** 3. **Métricas de Éxito:**`
-                : `Eres un experto en innovación para Núcleo Colectivo. Genera una solución creativa, concisa e inspiradora para el siguiente reto: Concepto Guía: ${currentChallenge.concepto}, Acción Principal: ${currentChallenge.accion}, Desafío a Superar: ${currentChallenge.desafio}, Contexto Específico: ${currentChallenge.contexto}. Genera la idea en un párrafo.`;
-            
+            const prompt = `Eres un experto en innovación para Núcleo Colectivo. Genera una solución creativa, concisa e inspiradora para el siguiente reto: Concepto Guía: ${currentChallenge.concepto}, Acción Principal: ${currentChallenge.accion}, Desafío a Superar: ${currentChallenge.desafio}, Contexto Específico: ${currentChallenge.contexto}. Genera la idea en un párrafo.`;
             try {
                 const resultText = await callGeminiAPI(prompt);
-                if (!isExpanding) { currentAiSolution = resultText; }
+                currentAiSolution = resultText;
                 currentSolution = resultText;
-                solutionTitle.textContent = isExpanding ? "🚀 Idea Expandida por IA" : "🧠 Solución Generada por IA";
-                
-                let htmlResult = resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\s*(-\s|\d\.\s)/g, '</li><li class="mt-1">').replace(/\n/g, '<br>');
-                if(htmlResult.includes('</li><li')){ htmlResult = '<ul class="list-none pl-4">' + htmlResult.substring(5) + '</ul>'; }
-                
-                solutionContent.innerHTML = htmlResult;
+                solutionTitle.textContent = "🧠 Solución Generada por IA";
+                solutionContent.innerHTML = currentSolution;
                 playSuccessSound();
                 solutionDisplay.classList.remove('hidden');
-                saveChallengeBtn.classList.remove('hidden');
-                if(!isExpanding) { expandSection.classList.remove('hidden'); }
-
+                expandIdeaBtn.classList.remove('hidden');
+                reimaginarRetoBtn.classList.remove('hidden');
             } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                solutionContent.textContent = "Hubo un error al contactar a la IA. Por favor, intenta de nuevo.";
+                solutionContent.textContent = "Hubo un error al contactar a la IA.";
                 solutionDisplay.classList.remove('hidden');
-                solutionChoices.classList.remove('hidden');
             } finally {
+                toggleLoading(aiSolutionBtn, false);
                 loadingIndicator.classList.add('hidden');
             }
+        });
+
+        expandIdeaBtn.addEventListener('click', async () => {
+            playAISound();
+            toggleLoading(expandIdeaBtn, true);
+            const prompt = `Eres un estratega de proyectos para Núcleo Colectivo. Toma la siguiente idea y expándela. Reto Original: Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}, Contexto: ${currentChallenge.contexto}. Solución Inicial de IA: "${currentAiSolution}". Tu tarea es desarrollar esta idea con mayor profundidad. Responde usando Markdown y emojis. Cubre los siguientes puntos: 1. **Posibles Colaboradores:** 2. **Recursos Necesarios:** 3. **Métricas de Éxito:**`;
+             try {
+                const resultText = await callGeminiAPI(prompt);
+                currentSolution = resultText; // Update solution with expanded text
+                solutionTitle.textContent = "🚀 Idea Expandida por IA";
+                let htmlResult = resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\s*(-\s|\d\.\s)/g, '</li><li class="mt-1">').replace(/\n/g, '<br>');
+                if(htmlResult.includes('</li><li')){ htmlResult = '<ul class="list-none pl-4">' + htmlResult.substring(5) + '</ul>'; }
+                solutionContent.innerHTML = htmlResult;
+                playSuccessSound();
+            } catch (error) {
+                solutionContent.innerHTML += "<br><p>Error al expandir la idea.</p>";
+            } finally {
+                toggleLoading(expandIdeaBtn, false);
+            }
+        });
+        
+        reimaginarRetoBtn.addEventListener('click', async () => {
+             playAISound();
+             toggleLoading(reimaginarRetoBtn, true);
+             const prompt = `Genera un reto de innovación social completamente nuevo para "Reto Creativo". Debe incluir un concepto, acción, desafío y contexto originales y creativos, no sacados de las listas predefinidas. Formatea como un objeto JSON con las claves: "concepto", "accion", "desafio", "contexto".`;
+             const schema = {
+                type: "OBJECT",
+                properties: {
+                    "concepto": { "type": "STRING" },
+                    "accion": { "type": "STRING" },
+                    "desafio": { "type": "STRING" },
+                    "contexto": { "type": "STRING" },
+                },
+                required: ["concepto", "accion", "desafio", "contexto"]
+            };
+             try {
+                const resultText = await callGeminiAPI(prompt, schema);
+                const newChallenge = JSON.parse(resultText);
+                currentChallenge = { id: Date.now(), ...newChallenge };
+                generateChallengeFromData(currentChallenge);
+                solutionDisplay.classList.add('hidden');
+                solutionChoices.classList.remove('hidden');
+                playSuccessSound();
+             } catch(e) {
+                console.error("Error al reimaginar el reto:", e);
+                alert("No se pudo reimaginar el reto. Intente de nuevo.");
+             } finally {
+                toggleLoading(reimaginarRetoBtn, false);
+             }
+        });
+
+        function generateChallengeFromData(challengeData) {
+            challengeContainer.innerHTML = '';
+            const summaryText = `En ${challengeData.contexto}, donde el desafío es ${challengeData.desafio}, tu reto es ${challengeData.accion} aplicando el concepto de ${challengeData.concepto}.`;
+            challengeSummaryText.textContent = summaryText;
+            displayCard("CONCEPTO", challengeData.concepto, 0);
+            displayCard("ACCIÓN", challengeData.accion, 1);
+            displayCard("DESAFÍO", challengeData.desafio, 2);
+            displayCard("CONTEXTO", challengeData.contexto, 3);
+            challengeSummary.classList.remove('hidden');
         }
 
-        async function callGeminiAPI(prompt) {
+
+        async function callGeminiAPI(prompt, jsonSchema = null) {
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            if (jsonSchema) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: jsonSchema,
+                };
+            }
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
             const result = await response.json();
             if (result.candidates?.[0]?.content?.parts?.[0]?.text) { return result.candidates[0].content.parts[0].text; }
@@ -399,24 +526,20 @@
         function loadChallenge(challenge) {
             startScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
-            challengeContainer.innerHTML = '';
-            currentChallenge = challenge;
-            const summaryText = `En ${currentChallenge.contexto}, donde el desafío es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto de ${currentChallenge.concepto}.`;
-            challengeSummaryText.textContent = summaryText;
-            challengeSummary.classList.remove('hidden');
-            displayCard("CONCEPTO", challenge.concepto, 0);
-            displayCard("ACCIÓN", challenge.accion, 1);
-            displayCard("DESAFÍO", challenge.desafio, 2);
-            displayCard("CONTEXTO", challenge.contexto, 3);
+            generateChallengeFromData(challenge);
             solutionChoices.classList.add('hidden');
-            expandSection.classList.add('hidden');
             solutionTitle.textContent = challenge.isAI ? "🧠 Solución Guardada (IA)" : "Solución Guardada";
             solutionContent.innerHTML = challenge.solution;
             solutionDisplay.classList.remove('hidden');
-            saveChallengeBtn.classList.remove('hidden');
+            expandIdeaBtn.style.display = challenge.isAI ? 'inline-flex' : 'none';
+            reimaginarRetoBtn.style.display = challenge.isAI ? 'inline-flex' : 'none';
         }
 
         closeModalBtn.addEventListener('click', () => savedChallengesModal.classList.add('hidden'));
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+        });
 
     </script>
 </body>
