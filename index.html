@@ -10,6 +10,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reto Creativo Interactivo</title>
+    <meta name="description" content="Una herramienta de ideación interactiva por Núcleo Colectivo para generar retos creativos impulsados por IA.">
+    <meta property="og:title" content="Reto Creativo Interactivo">
+    <meta property="og:description" content="Una herramienta de ideación interactiva por Núcleo Colectivo para generar retos creativos impulsados por IA.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,8 +241,6 @@
         async function initializeFirebase() {
             const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
             if (!firebaseConfigStr) {
-                authStatusEl.innerHTML = `<p class="text-xs text-red-500 font-bold">¡Config de Firebase no encontrada!</p>`;
-                console.error("Firebase config variable (__firebase_config) not found.");
                 return;
             }
 
@@ -258,8 +259,7 @@
                 else { await signInAnonymously(auth); }
 
             } catch (error) {
-                console.error("Error al inicializar o autenticar con Firebase:", error);
-                authStatusEl.innerHTML = `<p class="text-xs text-red-500">Error de Firebase</p>`;
+                console.warn("Firebase no conectado:", error);
             }
         }
         
@@ -451,7 +451,8 @@
                 playSuccessSound();
              } catch(e) {
                 console.error("Error al reimaginar el reto:", e);
-                alert("No se pudo reimaginar el reto. Intente de nuevo.");
+                challengeSummaryText.textContent = "No se pudo reimaginar el reto con IA en este momento. Inténtalo de nuevo.";
+                challengeSummary.classList.remove('hidden');
              } finally {
                 toggleLoading(reimaginarRetoBtn, false);
              }
@@ -470,29 +471,24 @@
 
 
         async function callGeminiAPI(prompt, jsonSchema = null) {
-            const apiKey = "";
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            if (jsonSchema) {
-                payload.generationConfig = {
-                    responseMimeType: "application/json",
-                    responseSchema: jsonSchema
-                };
-            }
             try {
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const response = await fetch('/api/gemini/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, jsonSchema })
+                });
                 if (!response.ok) { 
-                    throw new Error(`La solicitud a la API falló con estado ${response.status}`); 
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `La solicitud a la API falló con estado ${response.status}`); 
                 }
                 const data = await response.json();
-                if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    return data.candidates[0].content.parts[0].text;
+                if (data.text) {
+                    return data.text;
                 }
                 return "No se pudo generar una respuesta válida de la IA.";
             } catch (error) {
                 console.error("Error llamando a la API de Gemini:", error);
-                return "Hubo un error al contactar la IA. Verifica la conexión o la clave de API.";
+                return "Hubo un error al contactar la IA. Verifica la conexión o la configuración del servidor.";
             }
         }
 
