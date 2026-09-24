@@ -556,926 +556,439 @@
     <!-- ==========================================
          APPLICATION LOGIC & ENGINES
          ========================================== -->
-    <script type="module">
-        // 1. DATA MATRICES FOR NÚCLEO COLECTIVO
-        const conceptos = [
-            "Sostenibilidad Artesanal", "Innovación Social Digital", "Educación Inmersiva", 
-            "Salud Comunitaria Preventiva", "Cultura Urbana Regenerativa", "Turismo Experiencial Local", 
-            "Memoria Histórica Digital", "Economía Circular Textil", "Gamificación para el Cambio Social", 
-            "Arte y Neurociencia", "Diseño Biofílico Urbano", "Soberanía Alimentaria Tecnológica"
-        ];
-        
-        const acciones = [
-            "Organizar Talleres Comunitarios", "Desarrollar una Plataforma Digital", "Crear una Instalación de Arte Público", 
-            "Lanzar una Campaña de Concienciación", "Diseñar un Programa de Voluntariado", "Producir un Documental Interactivo", 
-            "Crear un Laboratorio Ciudadano", "Establecer una Red de Trueque", "Lanzar un Podcast Colaborativo", 
-            "Diseñar una Experiencia de Realidad Aumentada", "Publicar un Fanzine Colectivo", "Mapear Activos Comunitarios"
-        ];
-        
-        const desafios = [
-            "Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", 
-            "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo", 
-            "Gentrificación Cultural", "Brecha Generacional", "Desinformación y Noticias Falsas", 
-            "Apatía Política", "Saturación del Mercado", "Vandalismo y Falta de Cuidado"
-        ];
-        
-        const contextos = [
-            "una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", 
-            "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido", 
-            "una Biblioteca Pública", "un Barrio Histórico en Transformación", "una Plataforma de Streaming", 
-            "un Festival de Música Independiente", "un Hospital Público", "una Antigua Zona Industrial"
-        ];
-
-        const cardStyles = {
-            CONCEPTO: { emoji: "💡", color: "cyan", border: "border-cyan-500/40", text: "text-cyan-400", bg: "bg-cyan-950/20" },
-            ACCIÓN: { emoji: "🛠️", color: "amber", border: "border-amber-500/40", text: "text-amber-400", bg: "bg-amber-950/20" },
-            DESAFÍO: { emoji: "🔥", color: "rose", border: "border-rose-500/40", text: "text-rose-400", bg: "bg-rose-950/20" },
-            CONTEXTO: { emoji: "🌍", color: "emerald", border: "border-emerald-500/40", text: "text-emerald-400", bg: "bg-emerald-950/20" }
-        };
-
-        // 2. AUDIO SYNTHS (TONE.JS)
-        let audioReady = false;
-        let soundEnabled = true;
-        let clickSynth, startSynth, aiSynth, successSynth;
-
-        async function initializeAudio() {
-            if (audioReady) return;
-            try {
-                await Tone.start();
-                clickSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 } }).toDestination();
-                startSynth = new Tone.FMSynth({ harmonicity: 2, modulationIndex: 5, envelope: { attack: 0.1, decay: 0.4, sustain: 0.1, release: 0.6 } }).toDestination();
-                aiSynth = new Tone.AMSynth({ harmonicity: 1.5, envelope: { attack: 0.02, decay: 0.4, sustain: 0.1, release: 0.4 } }).toDestination();
-                successSynth = new Tone.PolySynth(Tone.Synth, { envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
-                audioReady = true;
-            } catch (e) {
-                console.warn("Audio Context could not start:", e);
-            }
-        }
-
-        function playSound(type) {
-            if (!soundEnabled || !audioReady) return;
-            try {
-                if (type === 'click' && clickSynth) clickSynth.triggerAttackRelease('C5', '16n');
-                if (type === 'start' && startSynth) startSynth.triggerAttackRelease('D3', '2n');
-                if (type === 'ai' && aiSynth) aiSynth.triggerAttackRelease('A3', '4n');
-                if (type === 'success' && successSynth) successSynth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n');
-            } catch(e) {
-                // Ignore audio trigger errors gracefully
-            }
-        }
-
-        // Sound Toggle
-        const soundToggleBtn = document.getElementById('sound-toggle-btn');
-        const soundIcon = document.getElementById('sound-icon');
-        soundToggleBtn.addEventListener('click', () => {
-            soundEnabled = !soundEnabled;
-            soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
-            showToast(soundEnabled ? 'Sonidos activados' : 'Sonidos silenciados');
-        });
-
-        // 3. TOAST NOTIFICATION UTILITY
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
-        let toastTimeout;
-
-        function showToast(msg, icon = '✨') {
-            toastMessage.textContent = msg;
-            toastIcon.textContent = icon;
-            toast.classList.remove('translate-y-12', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-12', 'opacity-0');
-                toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 2400);
-        }
-
-        // 4. ENGINE MODES (Local 0-Tokens vs Gemini Flash Lite)
-        let activeEngineMode = 'offline'; // default: safe, 0 tokens
-        const engineOfflineBtn = document.getElementById('engine-offline-btn');
-        const engineAiBtn = document.getElementById('engine-ai-btn');
-        const currentEnginePill = document.getElementById('current-engine-pill');
-
-        function setEngineMode(mode) {
-            activeEngineMode = mode;
-            if (mode === 'offline') {
-                engineOfflineBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all bg-cyan-500 text-slate-950 font-bold shadow-sm';
-                engineAiBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white';
-                currentEnginePill.textContent = 'Modo: ⚡ Motor Núcleo (0 Tokens)';
-                currentEnginePill.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30';
-                showToast('Modo Núcleo activo (0 tokens / 0 cobros)', '🛡️');
-            } else {
-                engineAiBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all bg-fuchsia-500 text-slate-950 font-bold shadow-sm';
-                engineOfflineBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white';
-                currentEnginePill.textContent = 'Modo: 🧠 Gemini Flash Lite';
-                currentEnginePill.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-500/30';
-                showToast('Modo Gemini Flash Lite activo (Tope 250t)', '🧠');
-            }
-        }
-
-        engineOfflineBtn.addEventListener('click', () => setEngineMode('offline'));
-        engineAiBtn.addEventListener('click', () => setEngineMode('ai'));
-
-        // 5. APPLICATION STATE
-        let currentChallenge = {
-            id: null,
-            concepto: '',
-            accion: '',
-            desafio: '',
-            contexto: '',
-            date: ''
-        };
-        let currentSolution = '';
-        let currentAiSolution = '';
-        let lockedCards = { CONCEPTO: false, ACCIÓN: false, DESAFÍO: false, CONTEXTO: false };
-
-        // 6. DOM ELEMENTS
-        const startScreen = document.getElementById('start-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const startButton = document.getElementById('start-button');
-        const quickMethodBtn = document.getElementById('quick-method-btn');
-        const challengeContainer = document.getElementById('challenge-container');
-        const challengeSummary = document.getElementById('challenge-summary');
-        const challengeSummaryText = document.getElementById('challenge-summary-text');
-        const copySummaryBtn = document.getElementById('copy-summary-btn');
-        const copySummaryLabel = document.getElementById('copy-summary-label');
-        const rerollAllBtn = document.getElementById('reroll-all-btn');
-        
-        const solutionChoices = document.getElementById('solution-choices');
-        const nucleoSolutionBtn = document.getElementById('nucleo-solution-btn');
-        const aiSolutionBtn = document.getElementById('ai-solution-btn');
-        const aiBtnText = document.getElementById('ai-btn-text');
-        const aiBtnSpinner = document.getElementById('ai-btn-spinner');
-        const standardSolutionBtn = document.getElementById('standard-solution-btn');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        
-        const solutionDisplay = document.getElementById('solution-display');
-        const solutionTitle = document.getElementById('solution-title');
-        const solutionBadge = document.getElementById('solution-badge');
-        const solutionContent = document.getElementById('solution-content');
-        const solutionFallbackNotice = document.getElementById('solution-fallback-notice');
-        
-        const saveChallengeBtn = document.getElementById('save-challenge-btn');
-        const saveBtnText = document.getElementById('save-btn-text');
-        const exportSheetBtn = document.getElementById('export-sheet-btn');
-        const expandIdeaBtn = document.getElementById('expand-idea-btn');
-        const expandBtnText = document.getElementById('expand-btn-text');
-        const expandBtnSpinner = document.getElementById('expand-btn-spinner');
-        const reimaginarRetoBtn = document.getElementById('reimaginar-reto-btn');
-        const reimagineBtnText = document.getElementById('reimagine-btn-text');
-        const reimagineBtnSpinner = document.getElementById('reimagine-btn-spinner');
-        const copySolutionBtn = document.getElementById('copy-solution-btn');
-        const copySolutionText = document.getElementById('copy-solution-text');
-
-        // Navigation buttons & Modals
-        const navDeckBtn = document.getElementById('nav-deck-btn');
-        const navSavedBtn = document.getElementById('nav-saved-btn');
-        const navMethodBtn = document.getElementById('nav-method-btn');
-        const footerMethodLink = document.getElementById('footer-method-link');
-        const savedBadgeCount = document.getElementById('saved-badge-count');
-        const modalSavedCount = document.getElementById('modal-saved-count');
-        
-        const savedModal = document.getElementById('saved-challenges-modal');
-        const closeSavedModalBtn = document.getElementById('close-saved-modal-btn');
-        const savedList = document.getElementById('saved-list');
-        const savedSearchInput = document.getElementById('saved-search-input');
-        const clearAllSavedBtn = document.getElementById('clear-all-saved-btn');
-        
-        const methodModal = document.getElementById('method-modal');
-        const closeMethodModalBtn = document.getElementById('close-method-modal-btn');
-        
-        const exportModal = document.getElementById('export-modal');
-        const closeExportModalBtn = document.getElementById('close-export-modal-btn');
-        const printNowBtn = document.getElementById('print-now-btn');
-
-        // Worksheet Elements
-        const wsDate = document.getElementById('ws-date');
-        const wsId = document.getElementById('ws-id');
-        const wsConcepto = document.getElementById('ws-concepto');
-        const wsAccion = document.getElementById('ws-accion');
-        const wsDesafio = document.getElementById('ws-desafio');
-        const wsContexto = document.getElementById('ws-contexto');
-        const wsSintesis = document.getElementById('ws-sintesis');
-        const wsSolucion = document.getElementById('ws-solucion');
-
-        // Year update
-        document.getElementById('year').textContent = new Date().getFullYear();
-
-        // 7. LOCAL STORAGE FOR SAVED CHALLENGES
-        function getSavedChallenges() {
-            try {
-                return JSON.parse(localStorage.getItem('nucleo_saved_challenges') || '[]');
-            } catch (e) {
-                return [];
-            }
-        }
-
-        function saveChallenges(items) {
-            localStorage.setItem('nucleo_saved_challenges', JSON.stringify(items));
-            updateSavedCounters();
-        }
-
-        function updateSavedCounters() {
-            const items = getSavedChallenges();
-            savedBadgeCount.textContent = items.length;
-            modalSavedCount.textContent = items.length;
-        }
-
-        // 8. HEURISTIC NÚCLEO ENGINE (0 TOKENS / OFFLINE)
-        const estrategiasPorDesafio = {
-            "Falta de Recursos Económicos": "diseño de bajo costo, reaprovechamiento de materiales de desecho y economías del trueque colaborativo",
-            "Desinterés Comunitario": "microintervenciones lúdicas en el espacio cotidiano y dinámicas de escucha activa puerta a puerta",
-            "Barreras Tecnológicas": "interfaces analógico-digitales híbridas (tarjetas impresas, audio simple o dinámicas sin pantallas)",
-            "Competencia con Grandes Corporaciones": "revalorización del relato artesanal, identidad de proximidad y soberanía de los creadores",
-            "Regulaciones Gubernamentales Estrictas": "activaciones tácticas temporales, metodologías de urbanismo táctico y redes autogestionadas",
-            "Impacto Ambiental Negativo": "diseño circular, biomateriales locales y visualización de huella ecológica con arte pedagógico",
-            "Gentrificación Cultural": "preservación viva de saberes barriales, cartografías afectivas y espacios de encuentro vecinal",
-            "Brecha Generacional": "emparejamiento de parejas creativas (jóvenes digitales + sabios tradicionales) en mentorías cruzadas",
-            "Desinformación y Noticias Falsas": "laboratorios de verificación comunitaria a través de fanzines, muralismo y podcasts colectivos",
-            "Apatía Política": "asambleas creativas gamificadas que traducen acuerdos ciudadanos en manifiestos artísticos tangibles",
-            "Saturación del Mercado": "diferenciación a través de piezas de edición limitada con trazabilidad poética y experiencias inmersivas",
-            "Vandalismo y Falta de Cuidado": "co-creación del espacio con la juventud local para generar sentido de autoría y custodia colectiva"
-        };
-
-        const accionTransformada = {
-            "Organizar Talleres Comunitarios": "un laboratorio participativo de co-creación intensiva",
-            "Desarrollar una Plataforma Digital": "un repositorio accesible y cooperativo de saberes abiertos",
-            "Crear una Instalación de Arte Público": "una pieza interactiva de sitio específico",
-            "Lanzar una Campaña de Concienciación": "una narrativa transmedia que combine carteles de guerrilla y relatos orales",
-            "Diseñar un Programa de Voluntariado": "una red de brigadas culturales itinerantes",
-            "Producir un Documental Interactivo": "un mosaico testimonial que invite a la audiencia a intervenir la historia",
-            "Crear un Laboratorio Ciudadano": "una estación comunitaria de prototipado rápido y experimentación",
-            "Establecer una Red de Trueque": "un sistema circular de intercambio de habilidades, herramientas y afectos",
-            "Lanzar un Podcast Colaborativo": "una serie de cápsulas sonoras grabadas directamente con los habitantes",
-            "Diseñar una Experiencia de Realidad Aumentada": "capas poéticas interactivas superpuestas al territorio físico",
-            "Publicar un Fanzine Colectivo": "una publicación editorial experimental de edición popular y libre distribución",
-            "Mapear Activos Comunitarios": "una cartografía viva que visibilice las fortalezas ocultas del territorio"
-        };
-
-        function generateNucleoSolution(c) {
-            const tacticaDesafio = estrategiasPorDesafio[c.desafio] || "dinámicas participativas de innovación social abierta";
-            const accionAdaptada = accionTransformada[c.accion] || c.accion;
-
-            return `
-                <div class="space-y-3">
-                    <p class="text-base text-slate-200">
-                        Para intervenir en <strong class="text-white">${c.contexto}</strong> frente a la problemática de <strong class="text-rose-300">${c.desafio}</strong>, la propuesta central consiste en activar <strong>${accionAdaptada}</strong> vertebrada por el enfoque de <em class="text-cyan-300">${c.concepto}</em>.
-                    </p>
-                    <div class="p-3.5 bg-cyan-950/40 border-l-2 border-cyan-400 rounded-r-lg text-sm text-slate-300">
-                        <strong class="text-cyan-300">Mecanismo de Transformación:</strong> Se sortea la barrera mediante <strong>${tacticaDesafio}</strong>, integrando el arte y la mediación comunitaria para que los mismos participantes se apropien del proceso como autores y custodios.
-                    </div>
-                </div>
-            `;
-        }
-
-        function expandNucleoIdea(c) {
-            return `
-                <div class="space-y-4 text-sm text-slate-200">
-                    <div class="p-3 rounded-lg bg-slate-900/60 border border-cyan-500/20">
-                        <h4 class="font-bold text-cyan-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
-                            👥 1. Colaboradores Estratégicos
-                        </h4>
-                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
-                            <li>Líderes barriales, comerciantes o artesanos activos en <strong>${c.contexto}</strong>.</li>
-                            <li>Colectivos juveniles de programación creativa, diseño o activismo cultural.</li>
-                            <li>Espacios educativos locales (escuelas o bibliotecas) como nodos de encuentro y legitimación.</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-3 rounded-lg bg-slate-900/60 border border-fuchsia-500/20">
-                        <h4 class="font-bold text-fuchsia-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
-                            📦 2. Recursos Clave (Bajo Costo)
-                        </h4>
-                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
-                            <li>Espacio común cedido temporalmente en el territorio.</li>
-                            <li>Kits de prototipado ágil: materiales reciclados, herramientas abiertas y software libre.</li>
-                            <li>Metodología de mediación de Núcleo Colectivo (dinámicas de escucha, mapeo y co-diseño).</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-3 rounded-lg bg-slate-900/60 border border-emerald-500/20">
-                        <h4 class="font-bold text-emerald-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
-                            🎯 3. Métricas de Impacto
-                        </h4>
-                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
-                            <li><strong>Superación del Desafío:</strong> Participación directa de personas afectadas por <em>${c.desafio}</em>.</li>
-                            <li><strong>Apropiación Social:</strong> Continuidad de iniciativas derivadas de forma autónoma.</li>
-                            <li><strong>Vínculo Comunitario:</strong> Grado de cohesión y confianza intergeneracional medido al cierre.</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-        }
-
-        const retosReimaginadosLocales = [
-            { concepto: "Biomateriales y Soberanía Local", accion: "Construir un Laboratorio Móvil de Fabricación", desafio: "Dependencia de Cadenas Globales de Suministro", contexto: "una Red de Huertos Urbanos Vecinales" },
-            { concepto: "Paisajes Sonoros Intergeneracionales", accion: "Diseñar una Instalación de Arte Público", desafio: "Brecha Generacional y Pérdida de Oralidad", contexto: "una Plaza Pública Histórica" },
-            { concepto: "Soberanía de Datos Comunitarios", accion: "Desarrollar una Plataforma Digital", desafio: "Extractivismo Digital y Falta de Privacidad", contexto: "un Colectivo de Vendedoras Ambulantes" },
-            { concepto: "Diseño Biofílico y Cuidado Radical", accion: "Crear un Laboratorio Ciudadano", desafio: "Estrés Urbano y Falta de Áreas Verdes", contexto: "un Centro de Salud Comunitario" },
-            { concepto: "Economía Circular Textil y Memoria", accion: "Establecer una Red de Trueque", desafio: "Sobreproducción y Descarte Masivo de Prendas", contexto: "un Barrio de Tradición Confeccionista" }
-        ];
-
-        // 9. API CALL CLIENT (CALLS /api/gemini/generate SAFELY)
-        async function callGeminiAPI(prompt, jsonSchema = null, maxTokens = 250) {
-            try {
-                const response = await fetch('/api/gemini/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, jsonSchema, maxTokens })
-                });
-                if (!response.ok) { 
-                    const errData = await response.json().catch(() => ({}));
-                    console.warn("API returned non-ok status:", errData);
-                    return null;
-                }
-                const data = await response.json();
-                return data && data.text ? data : null;
-            } catch (error) {
-                console.warn("Error de conexión al llamar a la API:", error);
-                return null;
-            }
-        }
-
-        // 10. CARD GENERATION & INTERACTION
-        function getRandomItem(array) {
-            return array[Math.floor(Math.random() * array.length)];
-        }
-
-        function generateFullChallenge() {
-            playSound('click');
-            
-            if (!lockedCards.CONCEPTO) currentChallenge.concepto = getRandomItem(conceptos);
-            if (!lockedCards.ACCIÓN) currentChallenge.accion = getRandomItem(acciones);
-            if (!lockedCards.DESAFÍO) currentChallenge.desafio = getRandomItem(desafios);
-            if (!lockedCards.CONTEXTO) currentChallenge.contexto = getRandomItem(contextos);
-            
-            currentChallenge.id = 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-            currentChallenge.date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-            
-            renderChallengeBoard();
-        }
-
-        function rerollSingleDimension(dimension) {
-            playSound('click');
-            if (dimension === 'CONCEPTO') currentChallenge.concepto = getRandomItem(conceptos);
-            if (dimension === 'ACCIÓN') currentChallenge.accion = getRandomItem(acciones);
-            if (dimension === 'DESAFÍO') currentChallenge.desafio = getRandomItem(desafios);
-            if (dimension === 'CONTEXTO') currentChallenge.contexto = getRandomItem(contextos);
-            
-            renderChallengeBoard();
-            showToast(`${dimension} actualizado`, '🎲');
-        }
-
-        function toggleLockDimension(dimension) {
-            lockedCards[dimension] = !lockedCards[dimension];
-            renderChallengeBoard();
-            showToast(lockedCards[dimension] ? `${dimension} bloqueado` : `${dimension} liberado`, lockedCards[dimension] ? '🔒' : '🔓');
-        }
-
-        function renderChallengeBoard() {
-            challengeContainer.innerHTML = '';
-            
-            const dimensions = [
-                { key: "CONCEPTO", val: currentChallenge.concepto, array: conceptos },
-                { key: "ACCIÓN", val: currentChallenge.accion, array: acciones },
-                { key: "DESAFÍO", val: currentChallenge.desafio, array: desafios },
-                { key: "CONTEXTO", val: currentChallenge.contexto, array: contextos }
-            ];
-
-            dimensions.forEach((dim, idx) => {
-                const style = cardStyles[dim.key];
-                const isLocked = lockedCards[dim.key];
-                
-                const cardEl = document.createElement('div');
-                cardEl.className = `glass-panel rounded-2xl p-4 flex flex-col justify-between h-56 border ${style.border} relative overflow-hidden group hover:border-opacity-100 transition-all duration-300 animate-card-in`;
-                cardEl.style.animationDelay = `${idx * 60}ms`;
-
-                cardEl.innerHTML = `
-                    <div class="flex items-center justify-between gap-1 mb-2">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-sm">${style.emoji}</span>
-                            <span class="font-display font-bold text-xs uppercase tracking-wider ${style.text}">${dim.key}</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button class="lock-btn p-1 rounded-md text-xs transition-colors ${isLocked ? 'text-amber-400 bg-amber-950/60' : 'text-slate-500 hover:text-slate-300'}" title="${isLocked ? 'Desbloquear dimensión' : 'Bloquear esta dimensión'}">
-                                ${isLocked ? '🔒' : '🔓'}
-                            </button>
-                            <button class="reroll-dim-btn p-1 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" title="Cambiar solo esta carta">
-                                🎲
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="my-auto py-2">
-                        <p class="text-sm sm:text-base font-semibold text-slate-100 leading-snug">
-                            ${dim.val}
-                        </p>
-                    </div>
-
-                    <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-                        <span class="font-mono text-[10px] uppercase">Eje ${idx + 1}/4</span>
-                        <span class="text-[10px] text-slate-500">${isLocked ? 'Fijado' : 'Aleatorio'}</span>
-                    </div>
-                `;
-
-                // Wire individual lock & reroll buttons
-                cardEl.querySelector('.lock-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleLockDimension(dim.key);
-                });
-
-                cardEl.querySelector('.reroll-dim-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    rerollSingleDimension(dim.key);
-                });
-
-                challengeContainer.appendChild(cardEl);
-            });
-
-            // Update Summary Text
-            const summaryHTML = `En <strong class="text-emerald-400">${currentChallenge.contexto}</strong>, donde el desafío crítico es <strong class="text-rose-400">${currentChallenge.desafio}</strong>, tu reto es <strong class="text-amber-400">${currentChallenge.accion}</strong> aplicando el concepto guía de <strong class="text-cyan-400">${currentChallenge.concepto}</strong>.`;
-            challengeSummaryText.innerHTML = summaryHTML;
-            challengeSummary.classList.remove('hidden');
-
-            // Reset solution view on new challenge
-            solutionDisplay.classList.add('hidden');
-            solutionChoices.classList.remove('hidden');
-            solutionFallbackNotice.classList.add('hidden');
-            currentSolution = '';
-            currentAiSolution = '';
-        }
-
-        // Copy Synthesized Summary
-        copySummaryBtn.addEventListener('click', async () => {
-            const rawText = `En ${currentChallenge.contexto}, donde el desafío crítico es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto guía de ${currentChallenge.concepto}.`;
-            try {
-                await navigator.clipboard.writeText(rawText);
-                copySummaryLabel.textContent = "¡Copiado!";
-                showToast("Síntesis copiada al portapapeles", "📋");
-                setTimeout(() => { copySummaryLabel.textContent = "Copiar"; }, 1600);
-            } catch (e) {
-                showToast("No se pudo copiar", "⚠️");
-            }
-        });
-
-        // 11. SOLUTION HANDLERS
-
-        // Pathway 1: Motor Núcleo (0 Tokens)
-        nucleoSolutionBtn.addEventListener('click', () => {
-            playSound('success');
-            solutionTitle.textContent = "⚡ Propuesta Estratégica Núcleo";
-            solutionBadge.textContent = "0 Tokens • Motor Local";
-            solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
-            solutionFallbackNotice.classList.add('hidden');
-            
-            currentSolution = generateNucleoSolution(currentChallenge);
-            currentAiSolution = currentSolution;
-            solutionContent.innerHTML = currentSolution;
-            
-            solutionChoices.classList.add('hidden');
-            solutionDisplay.classList.remove('hidden');
-            showToast("Solución generada al instante", "⚡");
-        });
-
-        // Pathway 2: Guía Metodológica en 4 Fases
-        standardSolutionBtn.addEventListener('click', () => {
-            playSound('click');
-            solutionTitle.textContent = "📋 Plan de Implementación en 4 Fases";
-            solutionBadge.textContent = "Metodología Colectiva";
-            solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-slate-500/40 text-slate-300 bg-slate-900/40";
-            solutionFallbackNotice.classList.add('hidden');
-
-            currentSolution = `
-                <div class="space-y-3 text-sm">
-                    <p class="text-slate-300">Hoja de ruta sugerida para articular la intervención en el territorio:</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
-                            <span class="text-cyan-400 font-bold text-xs uppercase block mb-0.5">Fase 1 · Inmersión & Diagnóstico</span>
-                            <p class="text-xs text-slate-300">Mapear en profundidad <em>${currentChallenge.contexto}</em> y escuchar a las voces afectadas por <em>${currentChallenge.desafio}</em>.</p>
-                        </div>
-                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
-                            <span class="text-amber-400 font-bold text-xs uppercase block mb-0.5">Fase 2 · Co-diseño con Comunidad</span>
-                            <p class="text-xs text-slate-300">Taller participativo para aterrizar la acción de <em>${currentChallenge.accion}</em> bajo el prisma de <em>${currentChallenge.concepto}</em>.</p>
-                        </div>
-                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
-                            <span class="text-rose-400 font-bold text-xs uppercase block mb-0.5">Fase 3 · Prototipo Experimental</span>
-                            <p class="text-xs text-slate-300">Montaje de una versión ágil, de bajo costo y evaluable en menos de 48 horas en el espacio real.</p>
-                        </div>
-                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
-                            <span class="text-emerald-400 font-bold text-xs uppercase block mb-0.5">Fase 4 · Escalabilidad & Redes</span>
-                            <p class="text-xs text-slate-300">Sistematización de aprendizajes para buscar alianzas públicas, comunitarias o fondos culturales.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            solutionContent.innerHTML = currentSolution;
-            solutionChoices.classList.add('hidden');
-            solutionDisplay.classList.remove('hidden');
-        });
-
-        // Pathway 3: Gemini IA (Con fallback automático a Núcleo si hay congestión)
-        aiSolutionBtn.addEventListener('click', async () => {
-            // If user has chosen offline mode, redirect instantly
-            if (activeEngineMode === 'offline') {
-                nucleoSolutionBtn.click();
-                return;
-            }
-
-            playSound('ai');
-            aiBtnText.textContent = "Procesando...";
-            aiBtnSpinner.classList.remove('hidden');
-            aiSolutionBtn.disabled = true;
-            solutionChoices.classList.add('hidden');
-            loadingIndicator.classList.remove('hidden');
-
-            const prompt = `Eres un mediador y diseñador estratégico de Núcleo Colectivo (Arte + Tecnología + Comunidad). Formula una propuesta creativa y concisa (máximo 1 párrafo directo y accionable) para este reto: Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}, Contexto: ${currentChallenge.contexto}. Sé inspirador, comunitario y realista.`;
-
-            try {
-                const apiRes = await callGeminiAPI(prompt, null, 250);
-                if (apiRes && apiRes.text) {
-                    currentAiSolution = apiRes.text;
-                    currentSolution = `<p class="text-base text-slate-200 leading-relaxed font-light">${apiRes.text}</p>`;
-                    solutionTitle.textContent = "🧠 Solución Gemini Flash Lite";
-                    solutionBadge.textContent = "Free Tier • Token Cap 250";
-                    solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-fuchsia-500/40 text-fuchsia-300 bg-fuchsia-950/40";
-                    solutionFallbackNotice.classList.add('hidden');
-                    solutionContent.innerHTML = currentSolution;
-                    playSound('success');
-                } else {
-                    throw new Error("API response unavailable");
-                }
-            } catch (error) {
-                console.warn("Fallo o saturación en la API, activando Motor Núcleo:", error);
-                solutionFallbackNotice.classList.remove('hidden');
-                currentSolution = generateNucleoSolution(currentChallenge);
-                currentAiSolution = currentSolution;
-                solutionTitle.textContent = "⚡ Propuesta Estratégica Núcleo";
-                solutionBadge.textContent = "Modo Respaldo • 0 Tokens";
-                solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
-                solutionContent.innerHTML = currentSolution;
-                playSound('success');
-            } finally {
-                loadingIndicator.classList.add('hidden');
-                solutionDisplay.classList.remove('hidden');
-                aiBtnText.textContent = "🧠 Ideación con Gemini IA";
-                aiBtnSpinner.classList.add('hidden');
-                aiSolutionBtn.disabled = false;
-            }
-        });
-
-        // Expand Idea Button
-        expandIdeaBtn.addEventListener('click', async () => {
-            playSound('ai');
-            expandBtnText.textContent = "Expandiendo...";
-            expandBtnSpinner.classList.remove('hidden');
-            expandIdeaBtn.disabled = true;
-
-            if (activeEngineMode === 'offline') {
-                const expanded = expandNucleoIdea(currentChallenge);
-                solutionContent.innerHTML += `<div class="mt-4 pt-4 border-t border-white/10">${expanded}</div>`;
-                expandBtnText.textContent = "Idea Expandida ✓";
-                expandBtnSpinner.classList.add('hidden');
-                playSound('success');
-                showToast("Idea expandida con Motor Núcleo", "🚀");
-                return;
-            }
-
-            const prompt = `Como estratega de Núcleo Colectivo, toma esta idea para ${currentChallenge.contexto} y expándela muy concisamente. Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}. Idea previa: "${currentAiSolution}". Responde con 3 puntos breves en Markdown: 1. **Colaboradores Clave:** 2. **Recursos de Bajo Costo:** 3. **Métricas de Éxito:**`;
-
-            try {
-                const apiRes = await callGeminiAPI(prompt, null, 280);
-                if (apiRes && apiRes.text) {
-                    let htmlResult = apiRes.text
-                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                        .replace(/\n\s*(-\s|\d\.\s)/g, '</li><li class="mt-1">')
-                        .replace(/\n/g, '<br>');
-                    if (htmlResult.includes('</li><li')) { 
-                        htmlResult = '<ul class="list-disc list-inside space-y-1 text-slate-300 text-sm mt-2">' + htmlResult.substring(5) + '</ul>'; 
-                    }
-                    solutionContent.innerHTML += `<div class="mt-4 pt-4 border-t border-white/10"><h4 class="font-display font-bold text-sm text-cyan-300 mb-2">🚀 Desarrollo Estratégico</h4>${htmlResult}</div>`;
-                    playSound('success');
-                    showToast("Idea expandida por IA", "🚀");
-                } else {
-                    throw new Error("No expansion text");
-                }
-            } catch (e) {
-                console.warn("Fallback para expandir idea:", e);
-                const localExpanded = expandNucleoIdea(currentChallenge);
-                solutionContent.innerHTML += `<div class="mt-4 pt-4 border-t border-white/10">${localExpanded}</div>`;
-                playSound('success');
-                showToast("Idea expandida con respaldo local", "💡");
-            } finally {
-                expandBtnText.textContent = "Idea Expandida ✓";
-                expandBtnSpinner.classList.add('hidden');
-            }
-        });
-
-        // Reimaginar Reto Inédito
-        reimaginarRetoBtn.addEventListener('click', async () => {
-            playSound('ai');
-            reimagineBtnText.textContent = "Reimaginando...";
-            reimagineBtnSpinner.classList.remove('hidden');
-            reimaginarRetoBtn.disabled = true;
-
-            if (activeEngineMode === 'offline') {
-                const localItem = getRandomItem(retosReimaginadosLocales);
-                currentChallenge = {
-                    id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                    ...localItem
-                };
-                renderChallengeBoard();
-                reimagineBtnText.textContent = "🤖 Reimaginar Reto Inédito";
-                reimagineBtnSpinner.classList.add('hidden');
-                reimaginarRetoBtn.disabled = false;
-                playSound('success');
-                showToast("Reto inédito generado", "✨");
-                return;
-            }
-
-            const prompt = `Genera un reto de innovación social completamente inédito para "Reto Creativo" de Núcleo Colectivo (Arte + Tecnología + Comunidad). Devuelve JSON con: "concepto", "accion", "desafio", "contexto". Sé breve y vanguardista.`;
-            const schema = {
-                type: "object",
-                properties: {
-                    "concepto": { "type": "string" },
-                    "accion": { "type": "string" },
-                    "desafio": { "type": "string" },
-                    "contexto": { "type": "string" }
-                },
-                required: ["concepto", "accion", "desafio", "contexto"]
-            };
-
-            try {
-                const apiRes = await callGeminiAPI(prompt, schema, 200);
-                if (apiRes && apiRes.text) {
-                    const parsed = JSON.parse(apiRes.text);
-                    currentChallenge = {
-                        id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-                        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                        concepto: parsed.concepto,
-                        accion: parsed.accion,
-                        desafio: parsed.desafio,
-                        contexto: parsed.contexto
-                    };
-                    renderChallengeBoard();
-                    playSound('success');
-                    showToast("Reto inédito creado con Gemini", "✨");
-                } else {
-                    throw new Error("No parsed data");
-                }
-            } catch (e) {
-                console.warn("Fallback para reimaginar:", e);
-                const localItem = getRandomItem(retosReimaginadosLocales);
-                currentChallenge = {
-                    id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                    ...localItem
-                };
-                renderChallengeBoard();
-                playSound('success');
-                showToast("Reto inédito creado con motor local", "✨");
-            } finally {
-                reimagineBtnText.textContent = "🤖 Reimaginar Reto Inédito";
-                reimagineBtnSpinner.classList.add('hidden');
-                reimaginarRetoBtn.disabled = false;
-            }
-        });
-
-        // Copy Full Solution Text
-        copySolutionBtn.addEventListener('click', async () => {
-            try {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = solutionContent.innerHTML;
-                const text = tempDiv.innerText || tempDiv.textContent;
-                await navigator.clipboard.writeText(text);
-                copySolutionText.textContent = "¡Copiado!";
-                showToast("Propuesta copiada al portapapeles", "📋");
-                setTimeout(() => { copySolutionText.textContent = "Copiar texto"; }, 1600);
-            } catch (e) {
-                showToast("No se pudo copiar", "⚠️");
-            }
-        });
-
-        // Save Challenge Button
-        saveChallengeBtn.addEventListener('click', () => {
-            playSound('click');
-            const items = getSavedChallenges();
-            const exists = items.some(i => i.id === currentChallenge.id || (
-                i.concepto === currentChallenge.concepto && 
-                i.accion === currentChallenge.accion && 
-                i.desafio === currentChallenge.desafio && 
-                i.contexto === currentChallenge.contexto
-            ));
-
-            if (!exists) {
-                items.unshift({
-                    ...currentChallenge,
-                    solution: currentSolution || generateNucleoSolution(currentChallenge),
-                    timestamp: Date.now()
-                });
-                saveChallenges(items);
-                saveBtnText.textContent = "¡Guardado en ⭐!";
-                showToast("Reto guardado en favoritos", "⭐");
-                setTimeout(() => { saveBtnText.textContent = "Guardar Reto"; }, 1800);
-            } else {
-                saveBtnText.textContent = "Ya estaba guardado";
-                showToast("Este reto ya está en tus guardados", "ℹ️");
-                setTimeout(() => { saveBtnText.textContent = "Guardar Reto"; }, 1800);
-            }
-        });
-
-        // 12. EXPORT FICHA DE RETO (WORKSHOP PRINTABLE WORKSHEET)
-        exportSheetBtn.addEventListener('click', () => {
-            playSound('click');
-            wsDate.textContent = currentChallenge.date || new Date().toLocaleDateString('es-ES');
-            wsId.textContent = currentChallenge.id || 'RET-001';
-            wsConcepto.textContent = currentChallenge.concepto;
-            wsAccion.textContent = currentChallenge.accion;
-            wsDesafio.textContent = currentChallenge.desafio;
-            wsContexto.textContent = currentChallenge.contexto;
-            wsSintesis.textContent = challengeSummaryText.innerText || challengeSummaryText.textContent;
-            
-            // Set proposed solution in worksheet
-            if (currentSolution) {
-                wsSolucion.innerHTML = currentSolution;
-            } else {
-                wsSolucion.innerHTML = generateNucleoSolution(currentChallenge);
-            }
-
-            exportModal.classList.remove('hidden');
-        });
-
-        closeExportModalBtn.addEventListener('click', () => {
-            exportModal.classList.add('hidden');
-        });
-
-        printNowBtn.addEventListener('click', () => {
-            window.print();
-        });
-
-        // 13. SAVED CHALLENGES MODAL
-        navSavedBtn.addEventListener('click', () => {
-            playSound('click');
-            renderSavedList();
-            savedModal.classList.remove('hidden');
-        });
-
-        closeSavedModalBtn.addEventListener('click', () => {
-            savedModal.classList.add('hidden');
-        });
-
-        function renderSavedList(filterText = '') {
-            const items = getSavedChallenges();
-            savedList.innerHTML = '';
-
-            const filtered = items.filter(item => {
-                if (!filterText) return true;
-                const q = filterText.toLowerCase();
-                return (item.concepto && item.concepto.toLowerCase().includes(q)) ||
-                       (item.contexto && item.contexto.toLowerCase().includes(q)) ||
-                       (item.desafio && item.desafio.toLowerCase().includes(q));
-            });
-
-            if (filtered.length === 0) {
-                savedList.innerHTML = `
-                    <div class="text-center py-8 text-slate-500 text-xs">
-                        ${items.length === 0 ? 'Aún no has guardado ningún reto. Pulsa "Guardar Reto" en cualquier sesión.' : 'No se encontraron retos coincidentes.'}
-                    </div>
-                `;
-                return;
-            }
-
-            filtered.forEach((item, index) => {
-                const row = document.createElement('div');
-                row.className = 'glass-panel p-3.5 rounded-xl border border-white/5 hover:border-cyan-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3';
-                
-                row.innerHTML = `
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2 text-xs">
-                            <span class="font-mono text-cyan-400 font-bold">${item.id || 'RET'}</span>
-                            <span class="text-slate-500">·</span>
-                            <span class="text-slate-400 text-[11px]">${item.date || 'Reciente'}</span>
-                        </div>
-                        <h4 class="font-semibold text-slate-100 text-sm">
-                            ${item.concepto} + ${item.accion}
-                        </h4>
-                        <p class="text-xs text-slate-400">
-                            En <span class="text-emerald-300">${item.contexto}</span> · Desafío: <span class="text-rose-300">${item.desafio}</span>
-                        </p>
-                    </div>
-
-                    <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                        <button class="load-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 transition-colors">
-                            Cargar
-                        </button>
-                        <button class="delete-btn text-xs text-slate-500 hover:text-rose-400 p-1 transition-colors" title="Eliminar">
-                            🗑️
-                        </button>
-                    </div>
-                `;
-
-                row.querySelector('.load-btn').addEventListener('click', () => {
-                    currentChallenge = { ...item };
-                    renderChallengeBoard();
-                    if (item.solution) {
-                        currentSolution = item.solution;
-                        currentAiSolution = item.solution;
-                        solutionTitle.textContent = "⭐ Reto Guardado Cargado";
-                        solutionBadge.textContent = "Colección Personal";
-                        solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-amber-500/40 text-amber-300 bg-amber-950/40";
-                        solutionContent.innerHTML = item.solution;
-                        solutionChoices.classList.add('hidden');
-                        solutionDisplay.classList.remove('hidden');
-                    }
-                    savedModal.classList.add('hidden');
-                    showToast("Reto cargado en la mesa", "🎲");
-                });
-
-                row.querySelector('.delete-btn').addEventListener('click', () => {
-                    const updated = getSavedChallenges().filter(c => c.id !== item.id);
-                    saveChallenges(updated);
-                    renderSavedList(savedSearchInput.value);
-                    showToast("Reto eliminado de favoritos", "🗑️");
-                });
-
-                savedList.appendChild(row);
-            });
-        }
-
-        savedSearchInput.addEventListener('input', (e) => {
-            renderSavedList(e.target.value);
-        });
-
-        clearAllSavedBtn.addEventListener('click', () => {
-            if (confirm("¿Deseas eliminar todos los retos guardados?")) {
-                saveChallenges([]);
-                renderSavedList();
-                showToast("Lista de guardados vaciada");
-            }
-        });
-
-        // 14. METHODOLOGY MODAL
-        navMethodBtn.addEventListener('click', () => {
-            methodModal.classList.remove('hidden');
-        });
-        quickMethodBtn.addEventListener('click', () => {
-            methodModal.classList.remove('hidden');
-        });
-        footerMethodLink.addEventListener('click', () => {
-            methodModal.classList.remove('hidden');
-        });
-        closeMethodModalBtn.addEventListener('click', () => {
-            methodModal.classList.add('hidden');
-        });
-
-        // 15. START BUTTON & TOP NAVIGATION
-        startButton.addEventListener('click', async () => {
-            await initializeAudio();
-            playSound('start');
-            startScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            generateFullChallenge();
-        });
-
-        navDeckBtn.addEventListener('click', () => {
-            if (gameScreen.classList.contains('hidden')) {
-                startButton.click();
-            }
-        });
-
-        rerollAllBtn.addEventListener('click', () => {
-            generateFullChallenge();
-        });
-
-        // 16. GLOBAL KEYBOARD SHORTCUTS
-        document.addEventListener('keydown', (e) => {
-            // Spacebar spins the deck if on game screen and not typing in an input
-            if (e.code === 'Space' && !gameScreen.classList.contains('hidden') && e.target.tagName !== 'INPUT') {
-                e.preventDefault();
-                generateFullChallenge();
-            }
-            // Escape closes all modals
-            if (e.key === 'Escape') {
-                savedModal.classList.add('hidden');
-                methodModal.classList.add('hidden');
-                exportModal.classList.add('hidden');
-            }
-        });
-
-        // Close modals clicking on backdrop
-        [savedModal, methodModal, exportModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.add('hidden');
-                }
-            });
-        });
-
-        // Initial setup on load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateSavedCounters();
-        });
-    </script>
+    <script type="module">\n
+const CATEGORIES = [
+  ["01","INTELIGENCIA ARTIFICIAL","IA como herramienta creativa","🧠","cyan"],
+  ["02","PROGRAMACIÓN CREATIVA","Código como lenguaje artístico","⌘","blue"],
+  ["03","DISEÑO CROSSMEDIA","Una idea que vive en múltiples medios","◈","violet"],
+  ["04","EXPERIENCIAS DIGITALES","Diseñar mundos, reglas e interacciones","🎮","amber"],
+  ["05","INSTALACIONES INTERACTIVAS","Del espectador al participante","✦","rose"],
+  ["06","APLICACIONES Y PROTOTIPOS","De una idea a algo que funciona","▣","emerald"],
+  ["07","NARRATIVAS Y STORYTELLING","Historias, personajes y mundos","✍️","fuchsia"],
+  ["08","AUDIO, RADIO Y PODCAST","Voz, sonido y escucha","◉","sky"],
+  ["09","ARTE Y CULTURA","Creación, memoria y patrimonio","🎨","orange"],
+  ["10","COMUNIDAD Y TRANSFORMACIÓN SOCIAL","Participación y colaboración","◎","green"],
+  ["11","DISEÑO Y COMUNICACIÓN","Identidad, editorial y comunicación visual","▤","pink"],
+  ["12","TERRITORIO, ECOLOGÍA Y FUTUROS","Ciudad, naturaleza y futuros posibles","🌱","lime"],
+  ["13","ÉTICA Y TECNOLOGÍA","Datos, autoría, privacidad y decisiones","⚖️","yellow"],
+  ["14","EDUCACIÓN Y APRENDIZAJE","Pedagogías experimentales y laboratorios","📚","indigo"],
+  ["15","CIENCIA Y VISUALIZACIÓN","Datos, ciencia y representación","🔬","teal"],
+  ["16","FABRICACIÓN Y MATERIA","Objetos, sensores y prototipos físicos","⚙️","slate"]
+];
+
+const PACKS = {
+"01": {
+concepto:["IA generativa responsable","co-creación humano-máquina","alfabetización algorítmica","memoria aumentada"],
+medio:["asistente conversacional","imagen generativa","mapa interactivo","prototipo web"],
+accion:["investigar y contrastar","imaginar escenarios","transformar una colección","prototipar una experiencia"],
+restriccion:["no usar generación automática de imágenes","citar las fuentes y decisiones humanas","trabajar con datos públicos","mantener una versión completamente local"],
+contexto:["un archivo comunitario","un aula universitaria","un colectivo artístico","un barrio con memoria cultural"],
+desafio:["sesgos y representación","dependencia de herramientas","autoría y atribución","acceso desigual a la tecnología"]
+},
+"02": {
+concepto:["algoritmos poéticos","visualización generativa","código como materia","interacción emergente"],
+medio:["p5.js","Processing","canvas web","instalación audiovisual"],
+accion:["generar una composición","crear una interacción","traducir datos a formas","programar un comportamiento"],
+restriccion:["máximo 100 líneas de código","sin librerías externas","usar solo formas geométricas","el usuario debe modificar el resultado"],
+contexto:["una pantalla pública","un festival de arte","un laboratorio universitario","un sitio web experimental"],
+desafio:["hacer visible lo invisible","convertir reglas en estética","crear variación sin perder control","explicar el código a principiantes"]
+},
+"03": {
+concepto:["narrativa distribuida","universo transmedia","identidad expandida","participación multiplataforma"],
+medio:["web","redes sociales","video corto","instalación"],
+accion:["adaptar una historia","crear una campaña","conectar pistas","diseñar un recorrido"],
+restriccion:["usar tres medios distintos","cada medio debe aportar información nueva","no repetir el mismo contenido","crear una puerta de entrada sin contexto previo"],
+contexto:["un proyecto cultural","un festival","una iniciativa comunitaria","una exposición"],
+desafio:["mantener coherencia","evitar saturación","conectar audiencias distintas","convertir espectadores en participantes"]
+},
+"04": {
+concepto:["diseño de reglas","ficción interactiva","mecánicas de juego","mundo digital"],
+medio:["juego web","experiencia narrativa","prototipo interactivo","simulación"],
+accion:["crear una mecánica","diseñar un recorrido","convertir un problema en juego","construir un pequeño mundo"],
+restriccion:["una sola pantalla","sin tutorial escrito","partida de cinco minutos","solo tres reglas"],
+contexto:["un museo","un aula","una plaza virtual","una campaña cultural"],
+desafio:["hacer comprensible la interacción","mantener interés","equilibrar libertad y reglas","evitar recompensas obvias"]
+},
+"05": {
+concepto:["participación situada","sensibilidad corporal","espacio reactivo","presencia"],
+medio:["proyección","sonido espacial","sensor","luz"],
+accion:["activar un espacio","responder al movimiento","crear una atmósfera","transformar la experiencia del visitante"],
+restriccion:["sin gafas de realidad virtual","usar materiales accesibles","una interacción a la vez","debe poder observarse desde afuera"],
+contexto:["una galería","un espacio público","un centro cultural","un salón universitario"],
+desafio:["hacer visible la participación","evitar instrucciones complejas","integrar tecnología y espacio","crear una experiencia inclusiva"]
+},
+"06": {
+concepto:["mínimo producto viable","herramientas abiertas","diseño centrado en personas","automatización accesible"],
+medio:["app web","dashboard","herramienta colaborativa","micrositio"],
+accion:["resolver una tarea","organizar información","automatizar un proceso","crear un servicio digital"],
+restriccion:["sin registro obligatorio","mobile first","funcionar con conexión limitada","prototipar en una tarde"],
+contexto:["una organización cultural","un colectivo","un pequeño negocio","una institución educativa"],
+desafio:["reducir complejidad","hacerlo accesible","mantenerlo sostenible","resolver una necesidad real"]
+},
+"07": {
+concepto:["memoria oral","personaje colectivo","ficción especulativa","archivo vivo"],
+medio:["cómic digital","microdocumental","historia interactiva","sitio narrativo"],
+accion:["crear personajes","reconstruir una historia","diseñar un universo","convertir testimonios en relato"],
+restriccion:["máximo cinco escenas","un solo personaje habla","el final debe quedar abierto","combinar hechos y ficción claramente señalada"],
+contexto:["un barrio","una familia","un archivo histórico","una comunidad rural"],
+desafio:["evitar estereotipos","diferenciar memoria y ficción","mantener múltiples voces","hacer atractiva una historia cotidiana"]
+},
+"08": {
+concepto:["paisaje sonoro","memoria auditiva","radio expandida","voz comunitaria"],
+medio:["podcast","radio web","pieza sonora","instalación auditiva"],
+accion:["recopilar sonidos","entrevistar personas","crear una ficción sonora","mapear voces"],
+restriccion:["sin música de fondo","máximo diez minutos","solo sonidos registrados en territorio","una voz debe guiar toda la pieza"],
+contexto:["un mercado","un barrio","una universidad","un territorio rural"],
+desafio:["escuchar antes de producir","dar protagonismo a otras voces","hacer visible un territorio con sonido","evitar ruido innecesario"]
+},
+"09": {
+concepto:["patrimonio vivo","arte comunitario","memoria colectiva","cultura popular"],
+medio:["exposición","publicación","mural","archivo digital"],
+accion:["reinterpretar un patrimonio","crear una colección","documentar saberes","activar una pieza"],
+restriccion:["trabajar con materiales locales","incluir voces de la comunidad","no romantizar el pasado","dejar una copia abierta del resultado"],
+contexto:["un barrio histórico","una biblioteca","un museo comunitario","un festival local"],
+desafio:["actualizar sin borrar","hacer accesible el patrimonio","evitar apropiación","conectar generaciones"]
+},
+"10": {
+concepto:["co-diseño","inteligencia colectiva","cuidado comunitario","innovación social"],
+medio:["taller","mapa colectivo","plataforma comunitaria","intervención pública"],
+accion:["escuchar necesidades","crear acuerdos","prototipar con participantes","activar una red"],
+restriccion:["la comunidad toma decisiones","no depender de una sola persona","devolver los resultados al territorio","trabajar con recursos existentes"],
+contexto:["un barrio","una escuela","una organización social","un espacio comunitario"],
+desafio:["participación real","continuidad del proyecto","diversidad de voces","convertir conversación en acción"]
+},
+"11": {
+concepto:["sistema visual","tipografía experimental","diseño editorial","comunicación accesible"],
+medio:["cartel","publicación digital","identidad visual","infografía"],
+accion:["traducir información","crear una identidad","organizar contenido","diseñar una campaña"],
+restriccion:["máximo dos tipografías","funcionar en blanco y negro","una sola pieza base","debe entenderse en cinco segundos"],
+contexto:["un evento cultural","una organización","una campaña educativa","un proyecto independiente"],
+desafio:["jerarquizar información","evitar ruido visual","hacer accesible el mensaje","mantener identidad entre formatos"]
+},
+"12": {
+concepto:["futuros urbanos","ecología cotidiana","diseño regenerativo","cartografía afectiva"],
+medio:["mapa","experiencia web","instalación","visualización"],
+accion:["imaginar escenarios","mapear recursos","hacer visible un impacto","diseñar una alternativa"],
+restriccion:["usar datos del territorio","no presentar una solución única","incluir una acción cotidiana","hacer visible una consecuencia a largo plazo"],
+contexto:["una ciudad","un río","un barrio","un parque"],
+desafio:["pasar del diagnóstico a la acción","hacer comprensible el cambio","evitar futuros genéricos","conectar escalas local y global"]
+},
+"13": {
+concepto:["privacidad por diseño","sesgo algorítmico","autoría digital","soberanía de datos"],
+medio:["experimento interactivo","guía visual","simulación","prototipo educativo"],
+accion:["evidenciar un riesgo","diseñar una alternativa","hacer una auditoría","crear una situación hipotética"],
+restriccion:["no recolectar datos personales","explicar cada decisión","usar datos sintéticos","permitir abandonar la experiencia"],
+contexto:["un aula","una plataforma digital","una organización","un laboratorio"],
+desafio:["hacer visible una consecuencia","evitar miedo tecnológico","equilibrar utilidad y privacidad","explicar decisiones complejas"]
+},
+"14": {
+concepto:["aprendizaje haciendo","pedagogía lúdica","aprendizaje entre pares","aula expandida"],
+medio:["juego educativo","kit","plataforma","laboratorio"],
+accion:["crear un desafío","diseñar una dinámica","convertir un tema en experiencia","construir una herramienta docente"],
+restriccion:["sin presentación de diapositivas","máximo 20 minutos","debe permitir colaboración","el participante produce algo"],
+contexto:["una universidad","una escuela","un taller comunitario","un curso virtual"],
+desafio:["mantener participación","aprender sin memorizar","adaptarse a distintos niveles","evaluar sin examen tradicional"]
+},
+"15": {
+concepto:["datos como narrativa","visualización científica","ciencia ciudadana","patrones ocultos"],
+medio:["gráfico interactivo","mapa de datos","animación","instalación"],
+accion:["traducir datos","comparar variables","contar una historia con evidencia","crear una exploración visual"],
+restriccion:["una sola variable principal","fuentes visibles","sin gráficos predeterminados","el usuario debe descubrir algo"],
+contexto:["un laboratorio","un museo de ciencia","una universidad","un proyecto ciudadano"],
+desafio:["evitar interpretaciones engañosas","hacer comprensible lo complejo","mostrar incertidumbre","conectar datos con experiencia"]
+},
+"16": {
+concepto:["prototipado material","electrónica creativa","objetos sensibles","fabricación abierta"],
+medio:["Arduino","sensor","objeto físico","prototipo híbrido"],
+accion:["construir un dispositivo","hacer reaccionar un objeto","crear una interfaz física","prototipar una interacción"],
+restriccion:["máximo tres componentes","usar materiales recuperados","sin carcasa comercial","debe poder explicarse en un minuto"],
+contexto:["un taller maker","una exposición","un espacio público","un laboratorio universitario"],
+desafio:["integrar materia y código","hacerlo reparable","reducir componentes","crear una interacción intuitiva"]
+}
+};
+
+const CARD_STYLES = {
+  CATEGORIA:{emoji:"◈",border:"border-violet-500/40",text:"text-violet-300",bg:"bg-violet-950/20"},
+  CONCEPTO:{emoji:"💡",border:"border-cyan-500/40",text:"text-cyan-300",bg:"bg-cyan-950/20"},
+  MEDIO:{emoji:"◉",border:"border-sky-500/40",text:"text-sky-300",bg:"bg-sky-950/20"},
+  ACCION:{emoji:"🛠️",border:"border-amber-500/40",text:"text-amber-300",bg:"bg-amber-950/20"},
+  RESTRICCION:{emoji:"⛓️",border:"border-rose-500/40",text:"text-rose-300",bg:"bg-rose-950/20"},
+  CONTEXTO:{emoji:"🌍",border:"border-emerald-500/40",text:"text-emerald-300",bg:"bg-emerald-950/20"},
+  DESAFIO:{emoji:"🔥",border:"border-fuchsia-500/40",text:"text-fuchsia-300",bg:"bg-fuchsia-950/20"}
+};
+
+const startScreen=document.getElementById("start-screen");
+const gameScreen=document.getElementById("game-screen");
+const startButton=document.getElementById("start-button");
+const challengeContainer=document.getElementById("challenge-container");
+const challengeSummary=document.getElementById("challenge-summary");
+const challengeSummaryText=document.getElementById("challenge-summary-text");
+const rerollAllBtn=document.getElementById("reroll-all-btn");
+const solutionChoices=document.getElementById("solution-choices");
+const solutionDisplay=document.getElementById("solution-display");
+const solutionTitle=document.getElementById("solution-title");
+const solutionBadge=document.getElementById("solution-badge");
+const solutionContent=document.getElementById("solution-content");
+const saveChallengeBtn=document.getElementById("save-challenge-btn");
+const saveBtnText=document.getElementById("save-btn-text");
+const exportSheetBtn=document.getElementById("export-sheet-btn");
+const copySummaryBtn=document.getElementById("copy-summary-btn");
+const copySummaryLabel=document.getElementById("copy-summary-label");
+const copySolutionBtn=document.getElementById("copy-solution-btn");
+const copySolutionText=document.getElementById("copy-solution-text");
+const savedModal=document.getElementById("saved-challenges-modal");
+const savedList=document.getElementById("saved-list");
+const savedSearchInput=document.getElementById("saved-search-input");
+const savedBadgeCount=document.getElementById("saved-badge-count");
+const modalSavedCount=document.getElementById("modal-saved-count");
+const methodModal=document.getElementById("method-modal");
+const exportModal=document.getElementById("export-modal");
+const navSavedBtn=document.getElementById("nav-saved-btn");
+const navMethodBtn=document.getElementById("nav-method-btn");
+const navDeckBtn=document.getElementById("nav-deck-btn");
+const quickMethodBtn=document.getElementById("quick-method-btn");
+const footerMethodLink=document.getElementById("footer-method-link");
+const soundToggleBtn=document.getElementById("sound-toggle-btn");
+const soundIcon=document.getElementById("sound-icon");
+
+let soundEnabled=true,audioReady=false,clickSynth,startSynth,successSynth;
+let lockedCards={CONCEPTO:false,MEDIO:false,ACCION:false,RESTRICCION:false,CONTEXTO:false,DESAFIO:false};
+let currentCategory="ALL";
+let currentChallenge={id:"",category:"",categoryName:"",concepto:"",medio:"",accion:"",restriccion:"",contexto:"",desafio:"",date:""};
+let currentSolution="";
+
+function getCategory(id){return CATEGORIES.find(c=>c[0]===id);}
+function getPool(id,key){return id==="ALL"?CATEGORIES.flatMap(c=>(PACKS[c[0]]?.[key]||[])):PACKS[id]?.[key]||[];}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function makeId(){return "RET-"+Math.random().toString(36).slice(2,8).toUpperCase();}
+
+function categoryName(){
+  return currentCategory==="ALL" ? "Todas las categorías" : getCategory(currentCategory)[1];
+}
+
+function injectCategoryUI(){
+  const old=document.getElementById("reto-category-panel");
+  if(old) old.remove();
+  const panel=document.createElement("div");
+  panel.id="reto-category-panel";
+  panel.className="glass-panel rounded-2xl p-4 border border-white/10 mb-4";
+  panel.innerHTML=`
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+      <div>
+        <div class="text-[10px] uppercase tracking-[.2em] text-cyan-400 font-bold">Universo de RETO</div>
+        <div class="text-sm text-slate-300 mt-1"><strong class="text-white">${CATEGORIES.length} categorías</strong> · combinaciones locales · sin IA</div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <select id="reto-category-select" class="bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none">
+          <option value="ALL">◈ TODAS LAS CATEGORÍAS</option>
+          ${CATEGORIES.map(c=>`<option value="${c[0]}">${c[0]} · ${c[1]}</option>`).join("")}
+        </select>
+        <button id="reto-random-category" class="px-3 py-2 rounded-lg bg-violet-500/20 text-violet-200 border border-violet-500/30 text-xs font-bold">⚡ Categoría sorpresa</button>
+      </div>
+    </div>
+    <div id="reto-category-chips" class="flex gap-1.5 overflow-x-auto pt-3 pb-1">
+      ${CATEGORIES.map(c=>`<button data-cat="${c[0]}" class="reto-chip shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-white/10 text-slate-400 hover:text-white hover:border-violet-400/40">${c[0]} · ${c[1]}</button>`).join("")}
+    </div>`;
+  challengeContainer.parentElement.insertBefore(panel,challengeContainer);
+  const select=document.getElementById("reto-category-select");
+  select.value=currentCategory;
+  select.addEventListener("change",()=>{currentCategory=select.value;updateCategoryUI();generateFullChallenge();});
+  document.getElementById("reto-random-category").addEventListener("click",()=>{currentCategory=pick(CATEGORIES)[0];updateCategoryUI();generateFullChallenge();});
+  panel.querySelectorAll(".reto-chip").forEach(b=>b.addEventListener("click",()=>{currentCategory=b.dataset.cat;updateCategoryUI();generateFullChallenge();}));
+}
+function updateCategoryUI(){
+  const select=document.getElementById("reto-category-select"); if(select) select.value=currentCategory;
+  document.querySelectorAll(".reto-chip").forEach(b=>{
+    const active=b.dataset.cat===currentCategory;
+    b.classList.toggle("bg-violet-500/20",active); b.classList.toggle("text-violet-200",active); b.classList.toggle("text-slate-400",!active);
+  });
+}
+
+function filteredPool(key){
+  if(currentCategory!=="ALL") return getPool(currentCategory,key);
+  return getPool("ALL",key);
+}
+
+function generateFullChallenge(){
+  const cat=currentCategory==="ALL"?pick(CATEGORIES):getCategory(currentCategory);
+  const id=cat[0];
+  currentChallenge.category=id;
+  currentChallenge.categoryName=cat[1];
+  currentChallenge.id=makeId();
+  currentChallenge.date=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
+  if(!lockedCards.CONCEPTO) currentChallenge.concepto=pick(filteredPool("concepto"));
+  if(!lockedCards.MEDIO) currentChallenge.medio=pick(filteredPool("medio"));
+  if(!lockedCards.ACCION) currentChallenge.accion=pick(filteredPool("accion"));
+  if(!lockedCards.RESTRICCION) currentChallenge.restriccion=pick(filteredPool("restriccion"));
+  if(!lockedCards.CONTEXTO) currentChallenge.contexto=pick(filteredPool("contexto"));
+  if(!lockedCards.DESAFIO) currentChallenge.desafio=pick(filteredPool("desafio"));
+  renderChallengeBoard();
+  playSound("click");
+}
+
+function reroll(dimension){
+  const map={CONCEPTO:"concepto",MEDIO:"medio",ACCION:"accion",RESTRICCION:"restriccion",CONTEXTO:"contexto",DESAFIO:"desafio"};
+  const key=map[dimension];
+  if(key) currentChallenge[key]=pick(filteredPool(key));
+  currentChallenge.id=makeId();
+  renderChallengeBoard();
+  showToast(dimension+" actualizado","🎲");
+}
+function toggleLock(dimension){
+  lockedCards[dimension]=!lockedCards[dimension];
+  renderChallengeBoard();
+  showToast(lockedCards[dimension]?dimension+" bloqueado":dimension+" liberado",lockedCards[dimension]?"🔒":"🔓");
+}
+
+function renderChallengeBoard(){
+  challengeContainer.innerHTML="";
+  const dims=[
+    ["CATEGORIA",currentChallenge.categoryName],
+    ["CONCEPTO",currentChallenge.concepto],
+    ["MEDIO",currentChallenge.medio],
+    ["ACCION",currentChallenge.accion],
+    ["RESTRICCION",currentChallenge.restriccion],
+    ["CONTEXTO",currentChallenge.contexto],
+    ["DESAFIO",currentChallenge.desafio]
+  ];
+  challengeContainer.className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3";
+  dims.forEach(([key,val],idx)=>{
+    const s=CARD_STYLES[key];
+    const card=document.createElement("article");
+    card.className=`glass-panel rounded-2xl p-3.5 flex flex-col justify-between min-h-52 border ${s.border} relative overflow-hidden animate-card-in`;
+    card.style.animationDelay=`${idx*45}ms`;
+    if(key==="CATEGORIA"){
+      card.innerHTML=`<div><div class="flex items-center gap-2"><span>${s.emoji}</span><span class="font-display font-bold text-[10px] uppercase tracking-wider ${s.text}">CATEGORÍA</span></div><div class="mt-5"><p class="text-sm font-bold text-white leading-snug">${val}</p><p class="text-[11px] text-slate-500 mt-2">${getCategory(currentChallenge.category)[2]}</p></div></div><div class="pt-2 border-t border-white/5 text-[10px] text-slate-500 font-mono">CAMPO ${currentChallenge.category}</div>`;
+    } else {
+      const locked=lockedCards[key];
+      card.innerHTML=`<div class="flex items-center justify-between gap-1"><div class="flex items-center gap-1.5"><span>${s.emoji}</span><span class="font-display font-bold text-[10px] uppercase tracking-wider ${s.text}">${key}</span></div><div class="flex gap-1"><button class="lock p-1 rounded-md text-xs ${locked?"text-amber-300 bg-amber-950/50":"text-slate-500 hover:text-white"}">${locked?"🔒":"🔓"}</button><button class="reroll p-1 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-800">🎲</button></div></div><div class="my-auto py-3"><p class="text-sm font-semibold text-slate-100 leading-snug">${val}</p></div><div class="pt-2 border-t border-white/5 flex justify-between text-[10px] text-slate-500"><span>EJE ${idx}/6</span><span>${locked?"FIJADO":"ALEATORIO"}</span></div>`;
+      card.querySelector(".lock").onclick=()=>toggleLock(key);
+      card.querySelector(".reroll").onclick=()=>reroll(key);
+    }
+    challengeContainer.appendChild(card);
+  });
+  challengeSummary.classList.remove("hidden");
+  challengeSummaryText.innerHTML=`En <strong class="text-violet-300">${currentChallenge.categoryName}</strong>, explora <strong class="text-cyan-300">${currentChallenge.concepto}</strong> mediante <strong class="text-sky-300">${currentChallenge.medio}</strong>: <strong class="text-amber-300">${currentChallenge.accion}</strong>. <span class="text-rose-300">Restricción:</span> ${currentChallenge.restriccion}. <span class="text-emerald-300">Contexto:</span> ${currentChallenge.contexto}. <span class="text-fuchsia-300">Desafío:</span> ${currentChallenge.desafio}.`;
+  solutionDisplay.classList.add("hidden");
+  solutionChoices.classList.remove("hidden");
+  currentSolution="";
+}
+
+function buildLocalSolution(){
+  return `
+    <div class="space-y-4">
+      <p class="text-base text-slate-200">Diseña un primer prototipo para <strong class="text-white">${currentChallenge.contexto}</strong> que combine <strong class="text-cyan-300">${currentChallenge.concepto}</strong> con <strong class="text-sky-300">${currentChallenge.medio}</strong>.</p>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div class="p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/20"><b class="text-cyan-300 text-xs">01 · IDEA</b><p class="text-xs text-slate-300 mt-1">Define qué experiencia debe vivir una persona y qué cambia después de participar.</p></div>
+        <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-500/20"><b class="text-amber-300 text-xs">02 · PROTOTIPO</b><p class="text-xs text-slate-300 mt-1">Construye una versión mínima usando la acción: ${currentChallenge.accion}.</p></div>
+        <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20"><b class="text-emerald-300 text-xs">03 · PRUEBA</b><p class="text-xs text-slate-300 mt-1">Pruébalo con pocas personas y observa si resuelve el desafío: ${currentChallenge.desafio}.</p></div>
+      </div>
+      <div class="p-3.5 rounded-xl border border-rose-500/20 bg-rose-950/20"><b class="text-rose-300 text-xs">RESTRICCIÓN DEL RETO</b><p class="text-sm text-slate-300 mt-1">${currentChallenge.restriccion}</p></div>
+    </div>`;
+}
+
+function showLocalSolution(){
+  currentSolution=buildLocalSolution();
+  solutionTitle.textContent="⚡ Propuesta Núcleo";
+  solutionBadge.textContent="100% LOCAL · 0 IA · 0 TOKENS";
+  solutionBadge.className="text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
+  solutionContent.innerHTML=currentSolution;
+  solutionChoices.classList.add("hidden");
+  solutionDisplay.classList.remove("hidden");
+  playSound("success");
+}
+
+function showMethod(){
+  methodModal.classList.remove("hidden");
+}
+
+function getSaved(){try{return JSON.parse(localStorage.getItem("nucleo_saved_challenges")||"[]")}catch{return[]}}
+function setSaved(v){localStorage.setItem("nucleo_saved_challenges",JSON.stringify(v));updateSavedCounters();}
+function updateSavedCounters(){const n=getSaved().length;savedBadgeCount.textContent=n;modalSavedCount.textContent=n;}
+
+function saveCurrent(){
+  const items=getSaved();
+  const key=JSON.stringify([currentChallenge.category,currentChallenge.concepto,currentChallenge.medio,currentChallenge.accion,currentChallenge.restriccion,currentChallenge.contexto,currentChallenge.desafio]);
+  if(items.some(x=>x.signature===key)){showToast("Este reto ya está guardado","ℹ️");return;}
+  items.unshift({...currentChallenge,solution:currentSolution||buildLocalSolution(),signature:key,timestamp:Date.now()});
+  setSaved(items);saveBtnText.textContent="¡Guardado!";showToast("Reto guardado","⭐");
+  setTimeout(()=>saveBtnText.textContent="Guardar Reto",1500);
+}
+
+function renderSaved(filter=""){
+  const q=filter.toLowerCase();
+  const items=getSaved().filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
+  savedList.innerHTML=items.length?items.map((x,i)=>`
+    <div class="glass-panel p-3.5 rounded-xl border border-white/5 flex flex-col gap-2">
+      <div class="text-[10px] font-mono text-violet-300">${x.id} · ${x.categoryName}</div>
+      <div class="text-sm font-semibold text-white">${x.concepto} · ${x.medio}</div>
+      <div class="text-xs text-slate-400">${x.accion} · ${x.contexto}</div>
+      <div class="flex gap-2 justify-end"><button data-i="${i}" class="load px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-200 text-xs">Cargar</button><button data-i="${i}" class="del px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 text-xs">Eliminar</button></div>
+    </div>`).join(""):`<div class="text-center py-10 text-xs text-slate-500">No hay retos guardados.</div>`;
+  savedList.querySelectorAll(".load").forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];currentChallenge={...x};currentCategory=x.category;updateCategoryUI();renderChallengeBoard();savedModal.classList.add("hidden");});
+  savedList.querySelectorAll(".del").forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];setSaved(getSaved().filter(y=>y.signature!==x.signature));renderSaved(filter);});
+}
+
+function injectWorksheetFields(){
+  const grid=document.querySelector("#print-worksheet .grid.grid-cols-2");
+  if(!grid||grid.dataset.expanded)return;
+  grid.dataset.expanded="1";
+  const extras=[["MEDIO","ws-medio"],["RESTRICCIÓN","ws-restriccion"],["DESAFÍO","ws-desafio"]];
+  extras.forEach(([label,id])=>{const d=document.createElement("div");d.className="p-3 rounded-lg border border-slate-600 bg-slate-800/40";d.innerHTML=`<span class="text-[10px] uppercase font-bold text-slate-300">${label}</span><div id="${id}" class="text-sm font-semibold text-white mt-1"></div>`;grid.appendChild(d);});
+}
+
+function openExport(){
+  injectWorksheetFields();
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set("ws-date",currentChallenge.date);set("ws-id",currentChallenge.id);set("ws-concepto",currentChallenge.concepto);set("ws-accion",currentChallenge.accion);set("ws-desafio",currentChallenge.desafio);set("ws-contexto",currentChallenge.contexto);set("ws-medio",currentChallenge.medio);set("ws-restriccion",currentChallenge.restriccion);
+  set("ws-sintesis",challengeSummaryText.innerText);document.getElementById("ws-solucion").innerHTML=currentSolution||buildLocalSolution();
+  exportModal.classList.remove("hidden");
+}
+
+function showToast(msg,icon="✨"){
+  const t=document.getElementById("toast"),m=document.getElementById("toast-message"),i=document.getElementById("toast-icon");
+  m.textContent=msg;i.textContent=icon;t.classList.remove("translate-y-12","opacity-0");t.classList.add("translate-y-0","opacity-100");
+  clearTimeout(window.__toast);window.__toast=setTimeout(()=>{t.classList.add("translate-y-12","opacity-0");t.classList.remove("translate-y-0","opacity-100")},2200);
+}
+
+async function initAudio(){
+  if(audioReady||typeof Tone==="undefined")return;
+  try{await Tone.start();clickSynth=new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.005,decay:.1,sustain:.05,release:.1}}).toDestination();startSynth=new Tone.FMSynth({harmonicity:2,modulationIndex:5}).toDestination();successSynth=new Tone.PolySynth(Tone.Synth).toDestination();audioReady=true}catch{}
+}
+function playSound(type){if(!soundEnabled||!audioReady)return;try{if(type==="click")clickSynth?.triggerAttackRelease("C5","16n");if(type==="start")startSynth?.triggerAttackRelease("D3","8n");if(type==="success")successSynth?.triggerAttackRelease(["C4","E4","G4"],"8n")}catch{}}
+
+function removeAIFunctionality(){
+  ["engine-ai-btn","ai-solution-btn","expand-idea-btn","reimaginar-reto-btn","loading-indicator","solution-fallback-notice"].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
+  const engine=document.getElementById("engine-offline-btn"); if(engine){engine.textContent="⚡ MOTOR NÚCLEO · LOCAL";engine.disabled=true;engine.className="px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-500 text-slate-950";}
+  const pill=document.getElementById("current-engine-pill");if(pill)pill.textContent="⚡ MOTOR LOCAL · SIN IA";
+  const standard=document.getElementById("standard-solution-btn");if(standard){standard.textContent="📋 Plan de implementación";standard.onclick=showLocalSolution;}
+  const footer=document.querySelector("footer");if(footer)footer.innerHTML=footer.innerHTML.replace(/Gemini Flash Lite Ready/g,"Motor local · Sin IA");
+}
+
+injectCategoryUI();
+removeAIFunctionality();
+updateSavedCounters();
+updateCategoryUI();
+
+startButton.onclick=async()=>{await initAudio();startScreen.classList.add("hidden");gameScreen.classList.remove("hidden");generateFullChallenge();playSound("start");};
+navDeckBtn.onclick=()=>{if(gameScreen.classList.contains("hidden"))startButton.click();};
+rerollAllBtn.onclick=generateFullChallenge;
+saveChallengeBtn.onclick=saveCurrent;
+exportSheetBtn.onclick=openExport;
+copySummaryBtn.onclick=async()=>{await navigator.clipboard?.writeText(challengeSummaryText.innerText);copySummaryLabel.textContent="¡Copiado!";showToast("Reto copiado","📋");setTimeout(()=>copySummaryLabel.textContent="Copiar",1400)};
+copySolutionBtn.onclick=async()=>{const d=document.createElement("div");d.innerHTML=solutionContent.innerHTML;await navigator.clipboard?.writeText(d.innerText);copySolutionText.textContent="¡Copiado!";setTimeout(()=>copySolutionText.textContent="Copiar texto",1400)};
+document.getElementById("nucleo-solution-btn").onclick=showLocalSolution;
+quickMethodBtn.onclick=showMethod;navMethodBtn.onclick=showMethod;footerMethodLink.onclick=showMethod;
+navSavedBtn.onclick=()=>{renderSaved();savedModal.classList.remove("hidden")};
+savedSearchInput.oninput=e=>renderSaved(e.target.value);
+document.getElementById("clear-all-saved-btn").onclick=()=>{if(confirm("¿Eliminar todos los retos guardados?")){setSaved([]);renderSaved()}};
+document.getElementById("close-saved-modal-btn").onclick=()=>savedModal.classList.add("hidden");
+document.getElementById("close-method-modal-btn").onclick=()=>methodModal.classList.add("hidden");
+document.getElementById("close-export-modal-btn").onclick=()=>exportModal.classList.add("hidden");
+document.getElementById("print-now-btn").onclick=()=>window.print();
+soundToggleBtn.onclick=()=>{soundEnabled=!soundEnabled;soundIcon.textContent=soundEnabled?"🔊":"🔇";showToast(soundEnabled?"Sonidos activados":"Sonidos silenciados")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){savedModal.classList.add("hidden");methodModal.classList.add("hidden");exportModal.classList.add("hidden")}if(e.code==="Space"&&!gameScreen.classList.contains("hidden")&&e.target.tagName!=="INPUT"&&e.target.tagName!=="SELECT"){e.preventDefault();generateFullChallenge()}});
+[savedModal,methodModal,exportModal].forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.add("hidden")}));
+\n    </script>
 </body>
 </html>
