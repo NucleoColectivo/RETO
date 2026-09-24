@@ -1,17 +1,12 @@
 {
   "name": "reto-creativo-interactivo",
-  "version": "1.0.0",
-  "description": "Una herramienta de ideación interactiva por Núcleo Colectivo",
+  "version": "2.0.0",
+  "description": "Laboratorio de retos creativos de Núcleo Colectivo: arte, tecnología, diseño, comunidad y experimentación.",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
     "build": "echo 'No build required for static site'",
-    "lint": "node --check server.js"
+    "lint": "node --check index.html"
   },
-  "dependencies": {
-    "@google/genai": "*",
-    "express": "^4.21.2"
-  }
+  "dependencies": {}
 }
