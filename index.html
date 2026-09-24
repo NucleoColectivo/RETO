@@ -51,34 +51,60 @@
     
     <style>
         :root {
-            --bg-base: #0a0e17;
+            --bg-base: #080c14;
         }
         
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-base);
-            color: #f1f5f9;
-            min-height: 100vh;
+        html {
+            background-color: #080c14 !important;
         }
 
-        /* Ambient subtle radial glow */
-        .ambient-glow {
-            background: radial-gradient(circle at 50% 15%, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.04) 40%, transparent 70%);
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #080c14 !important;
+            color: #f1f5f9;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Fixed Artistic Background Layer from Núcleo Colectivo */
+        .ambient-bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-color: #060911;
+            background-image: 
+                radial-gradient(ellipse at 50% 15%, rgba(6, 182, 212, 0.20) 0%, transparent 65%),
+                radial-gradient(ellipse at 85% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 55%),
+                linear-gradient(to bottom, rgba(6, 9, 17, 0.55) 0%, rgba(6, 9, 17, 0.35) 45%, rgba(6, 9, 17, 0.85) 100%),
+                url('/backgrounds/bg-1.png'),
+                url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-1.png');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            transition: background-image 0.6s ease-in-out;
         }
 
         /* Refined glassmorphic card style */
         .glass-panel {
-            background: rgba(17, 24, 39, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(13, 20, 34, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
         }
         
         .glass-panel-elevated {
-            background: rgba(22, 31, 48, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(16px);
+            background: rgba(16, 26, 44, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        /* Text glow and shadow for pristine legibility */
+        .text-glow-title {
+            text-shadow: 0 4px 28px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.8);
         }
 
         /* 3D Flip Card Animation */
@@ -98,6 +124,25 @@
         
         .animate-card-in {
             animation: card-spin-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Smooth Solution Content Fade Transition */
+        #solution-content {
+            transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 1;
+            transform: translateY(0);
+            will-change: opacity, transform;
+        }
+
+        #solution-content.content-fade-out {
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+        }
+
+        #solution-content.content-fade-in {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* Custom spinner */
@@ -139,7 +184,10 @@
         }
     </style>
 </head>
-<body class="ambient-glow text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- Fixed Art Backdrop Layer with Measured Scrim -->
+    <div class="ambient-bg-layer" aria-hidden="true"></div>
 
     <!-- Toast Notification Container -->
     <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-xl text-sm font-medium">
@@ -184,14 +232,75 @@
             <!-- Zone 3: Primary Actions & Engine Selectors -->
             <div class="flex items-center gap-2.5">
                 
-                <!-- Engine Mode Selector (Zero-Tokens vs Motor Local) -->
+                <!-- Engine Mode Selector (Zero-Tokens vs Gemini Flash Lite) -->
                 <div class="flex items-center p-1 bg-slate-900/90 rounded-xl border border-white/10">
                     <button id="engine-offline-btn" title="Motor Local Núcleo (Cero consumo de datos ni cobros)" class="px-2.5 py-1 text-xs font-medium rounded-lg transition-all bg-cyan-500 text-slate-950 font-bold shadow-sm">
                         ⚡ Núcleo (0 Tokens)
                     </button>
-                    <button id="engine-ai-btn" title="Motor Local (Capa gratuita protegida con tope de tokens)" class="px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white">
-                        🧠 Motor Local IA
+                    <button id="engine-ai-btn" title="Gemini Flash Lite (Capa gratuita protegida con tope de tokens)" class="px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white">
+                        🧠 Gemini IA
                     </button>
+                </div>
+
+                <!-- Ambient Atmosphere Artwork Selector & Quick Cycle -->
+                <div class="relative flex items-center gap-1.5">
+                    <button id="cycle-theme-btn" title="Pasar a la siguiente obra artística de fondo" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-cyan-300 transition-colors border border-white/5 text-xs font-medium">
+                        <span>🎨</span>
+                        <span class="hidden lg:inline text-[11px]">Rotar Obra</span>
+                    </button>
+                    <button id="theme-selector-btn" title="Elegir obra de fondo de Núcleo Colectivo" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-cyan-300 transition-colors border border-white/5 text-xs font-medium">
+                        <span id="theme-btn-thumb" class="w-4 h-4 rounded-full bg-cover bg-center border border-white/30 inline-block shadow-sm" style="background-image: url('/backgrounds/bg-1.png');"></span>
+                        <span id="theme-btn-label" class="hidden xl:inline">Obra 01</span>
+                        <span class="text-[10px] text-slate-500">▾</span>
+                    </button>
+                    
+                    <!-- Themes Dropdown Menu with Núcleo Artworks -->
+                    <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-64 glass-panel-elevated rounded-xl p-1.5 shadow-2xl z-50 border border-white/10 text-xs max-h-80 overflow-y-auto">
+                        <div class="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-white/5 mb-1 flex items-center justify-between">
+                            <span>Obras de Fondo (Núcleo)</span>
+                            <span class="text-[9px] text-cyan-400 font-mono">10 Obras</span>
+                        </div>
+                        <button data-theme="obra1" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🎨</span><span>01 · Génesis Algorítmico</span></span>
+                            <span class="theme-check text-cyan-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra2" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🛠️</span><span>02 · Acción Colectiva</span></span>
+                            <span class="theme-check hidden text-amber-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra3" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🔥</span><span>03 · Tensión Crítica</span></span>
+                            <span class="theme-check hidden text-rose-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra4" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🌿</span><span>04 · Territorio & Raíces</span></span>
+                            <span class="theme-check hidden text-emerald-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra5" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>💡</span><span>05 · Redes Abiertas</span></span>
+                            <span class="theme-check hidden text-sky-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra6" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🪵</span><span>06 · Materia & Oficio</span></span>
+                            <span class="theme-check hidden text-amber-500 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra7" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>⚡</span><span>07 · Resistencia Cultural</span></span>
+                            <span class="theme-check hidden text-pink-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra8" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🌍</span><span>08 · Biósfera Viva</span></span>
+                            <span class="theme-check hidden text-teal-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra9" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🌌</span><span>09 · Horizonte Poético</span></span>
+                            <span class="theme-check hidden text-purple-400 text-xs font-bold">✓</span>
+                        </button>
+                        <button data-theme="obra10" class="theme-option-btn w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 hover:bg-white/10 text-slate-200 transition-colors">
+                            <span class="flex items-center gap-2"><span>🔮</span><span>10 · Convergencia Futura</span></span>
+                            <span class="theme-check hidden text-indigo-400 text-xs font-bold">✓</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Sound FX Toggle -->
@@ -205,46 +314,119 @@
         <main class="flex-grow flex flex-col justify-center">
 
             <!-- SCREEN 1: START WELCOME -->
-            <section id="start-screen" class="py-12 md:py-20 text-center max-w-3xl mx-auto animate-card-in">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-medium mb-6">
+            <section id="start-screen" class="py-6 md:py-10 text-center max-w-3xl mx-auto animate-card-in">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-cyan-500/40 text-cyan-300 text-xs font-medium mb-6 shadow-md">
                     <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
                     Laboratorio de Ideación Comunitaria & Diseño Social
                 </div>
 
-                <h1 class="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                <h1 class="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-5 leading-tight text-glow-title">
                     Cruza ideas. <br class="hidden sm:inline"/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300">
                         Detona futuros.
                     </span>
                 </h1>
 
-                <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-                    Generador de desafíos que combina cuatro ejes fundamentales: <strong>Concepto</strong>, <strong>Acción</strong>, <strong>Desafío</strong> y <strong>Contexto</strong>. Diseñado para procesos de co-creación artística, talleres comunitarios y laboratorios de innovación abierta.
+                <p class="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto mb-8 leading-relaxed font-normal text-glow-title">
+                    Generador de desafíos que combina cuatro ejes fundamentales: <strong class="text-white">Concepto</strong>, <strong class="text-white">Acción</strong>, <strong class="text-white">Desafío</strong> y <strong class="text-white">Contexto</strong>. Diseñado para procesos de co-creación artística, talleres comunitarios y laboratorios de innovación abierta.
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button id="start-button" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-display font-bold text-base bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                    <button id="start-button" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-display font-bold text-base bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
                         <span>Iniciar Ideación</span>
                         <span>→</span>
                     </button>
-                    <button id="quick-method-btn" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-sans text-sm font-medium text-slate-300 hover:text-white glass-panel hover:bg-slate-800/80 transition-colors">
+                    <button id="quick-method-btn" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-sans text-sm font-medium text-slate-200 hover:text-white glass-panel hover:bg-slate-800/90 transition-colors">
                         Ver cómo funciona
                     </button>
                 </div>
 
+                <!-- Visual Showcase of the 4 Dimensions with Núcleo Artworks -->
+                <div class="mt-10 text-left">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <span class="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                            <span class="text-cyan-400">🎨</span> Obras & Ejes del Mazo Creativo
+                        </span>
+                        <span class="text-[11px] text-cyan-300 font-mono hidden sm:inline">
+                            Colección Núcleo Colectivo
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <!-- Preview Card 1: CONCEPTO -->
+                        <div class="glass-panel rounded-2xl p-4 h-44 relative overflow-hidden border border-cyan-500/50 group hover:border-cyan-400 transition-all flex flex-col justify-between shadow-lg">
+                            <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                 style="background-image: url('/backgrounds/bg-1.png'), url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-1.png');"></div>
+                            <div class="absolute inset-0 z-0 bg-gradient-to-t from-slate-950/95 via-slate-950/75 to-slate-950/40"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-slate-950/80 border border-cyan-500/40 backdrop-blur-sm">💡 CONCEPTO</span>
+                                <span class="text-[10px] text-slate-300 font-mono bg-slate-950/60 px-1.5 py-0.5 rounded">Obra #1</span>
+                            </div>
+                            <div class="relative z-10">
+                                <p class="text-sm font-bold text-white drop-shadow-md leading-snug">Metáfora o Principio Rector</p>
+                                <span class="text-[11px] text-cyan-300/90 font-medium">Idea generatriz</span>
+                            </div>
+                        </div>
+
+                        <!-- Preview Card 2: ACCIÓN -->
+                        <div class="glass-panel rounded-2xl p-4 h-44 relative overflow-hidden border border-amber-500/50 group hover:border-amber-400 transition-all flex flex-col justify-between shadow-lg">
+                            <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                 style="background-image: url('/backgrounds/bg-2.png'), url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-2.png');"></div>
+                            <div class="absolute inset-0 z-0 bg-gradient-to-t from-slate-950/95 via-slate-950/75 to-slate-950/40"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-slate-950/80 border border-amber-500/40 backdrop-blur-sm">🛠️ ACCIÓN</span>
+                                <span class="text-[10px] text-slate-300 font-mono bg-slate-950/60 px-1.5 py-0.5 rounded">Obra #2</span>
+                            </div>
+                            <div class="relative z-10">
+                                <p class="text-sm font-bold text-white drop-shadow-md leading-snug">Intervención o Prototipo</p>
+                                <span class="text-[11px] text-amber-300/90 font-medium">Materia y práctica</span>
+                            </div>
+                        </div>
+
+                        <!-- Preview Card 3: DESAFÍO -->
+                        <div class="glass-panel rounded-2xl p-4 h-44 relative overflow-hidden border border-rose-500/50 group hover:border-rose-400 transition-all flex flex-col justify-between shadow-lg">
+                            <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                 style="background-image: url('/backgrounds/bg-3.png'), url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-3.png');"></div>
+                            <div class="absolute inset-0 z-0 bg-gradient-to-t from-slate-950/95 via-slate-950/75 to-slate-950/40"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-rose-300 bg-slate-950/80 border border-rose-500/40 backdrop-blur-sm">🔥 DESAFÍO</span>
+                                <span class="text-[10px] text-slate-300 font-mono bg-slate-950/60 px-1.5 py-0.5 rounded">Obra #3</span>
+                            </div>
+                            <div class="relative z-10">
+                                <p class="text-sm font-bold text-white drop-shadow-md leading-snug">Tensión Crítica o Dilema</p>
+                                <span class="text-[11px] text-rose-300/90 font-medium">Barrera a transformar</span>
+                            </div>
+                        </div>
+
+                        <!-- Preview Card 4: CONTEXTO -->
+                        <div class="glass-panel rounded-2xl p-4 h-44 relative overflow-hidden border border-emerald-500/50 group hover:border-emerald-400 transition-all flex flex-col justify-between shadow-lg">
+                            <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                 style="background-image: url('/backgrounds/bg-4.png'), url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-4.png');"></div>
+                            <div class="absolute inset-0 z-0 bg-gradient-to-t from-slate-950/95 via-slate-950/75 to-slate-950/40"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-slate-950/80 border border-emerald-500/40 backdrop-blur-sm">🌍 CONTEXTO</span>
+                                <span class="text-[10px] text-slate-300 font-mono bg-slate-950/60 px-1.5 py-0.5 rounded">Obra #4</span>
+                            </div>
+                            <div class="relative z-10">
+                                <p class="text-sm font-bold text-white drop-shadow-md leading-snug">Territorio & Comunidad</p>
+                                <span class="text-[11px] text-emerald-300/90 font-medium">Espacio situado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Feature Pillars -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-16 text-left">
-                    <div class="glass-panel p-4 rounded-xl border border-white/5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10 sm:mt-12 text-left">
+                    <div class="glass-panel p-4 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all">
                         <div class="text-cyan-400 font-display font-semibold text-sm mb-1">01. Cero Costo / 0 Tokens</div>
-                        <p class="text-xs text-slate-400">Motor heurístico local instantáneo. Funciona 100% offline sin gastar cuota.</p>
+                        <p class="text-xs text-slate-300 leading-relaxed">Motor heurístico local instantáneo. Funciona 100% offline sin gastar cuota.</p>
                     </div>
-                    <div class="glass-panel p-4 rounded-xl border border-white/5">
+                    <div class="glass-panel p-4 rounded-xl border border-white/10 hover:border-amber-500/30 transition-all">
                         <div class="text-amber-400 font-display font-semibold text-sm mb-1">02. Control Táctil por Carta</div>
-                        <p class="text-xs text-slate-400">Gira todas las cartas o vuelve a tirar una sola dimensión de forma selectiva.</p>
+                        <p class="text-xs text-slate-300 leading-relaxed">Gira todas las cartas o vuelve a tirar una sola dimensión de forma selectiva.</p>
                     </div>
-                    <div class="glass-panel p-4 rounded-xl border border-white/5">
+                    <div class="glass-panel p-4 rounded-xl border border-white/10 hover:border-emerald-500/30 transition-all">
                         <div class="text-emerald-400 font-display font-semibold text-sm mb-1">03. Ficha Descargable / Print</div>
-                        <p class="text-xs text-slate-400">Exporta tu reto en ficha limpia lista para mesas de trabajo en talleres.</p>
+                        <p class="text-xs text-slate-300 leading-relaxed">Exporta tu reto en ficha limpia lista para mesas de trabajo en talleres.</p>
                     </div>
                 </div>
             </section>
@@ -270,6 +452,98 @@
                     </div>
                 </div>
 
+                <!-- PROGRESS BAR: Visual Indicator of Fixed Dimensions -->
+                <div id="locked-progress-panel" class="glass-panel rounded-xl p-3 sm:p-3.5 border border-white/10 flex flex-col gap-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                <span>🔒</span>
+                                <span>Dimensiones fijadas:</span>
+                            </span>
+                            <span id="locked-count-badge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10 transition-colors">
+                                0 / 4
+                            </span>
+                            <span id="locked-state-description" class="text-[11px] text-slate-400 hidden sm:inline">
+                                — Todas las cartas girarán al azar
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button id="unlock-all-btn" class="hidden text-xs font-medium text-amber-300 hover:text-amber-200 transition-colors flex items-center gap-1 hover:underline">
+                                <span>🔓</span>
+                                <span>Liberar todas</span>
+                            </button>
+                            <span id="locked-percentage" class="text-xs font-mono font-medium text-slate-400">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- 4-Segment Visual Progress Bar -->
+                    <div class="w-full bg-slate-950/80 rounded-full h-2 p-0.5 border border-white/10 flex gap-1.5 overflow-hidden" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="4" id="locked-progress-bar">
+                        <div id="prog-seg-CONCEPTO" class="h-full flex-1 rounded-full bg-slate-800/80 transition-all duration-300" title="Concepto"></div>
+                        <div id="prog-seg-ACCIÓN" class="h-full flex-1 rounded-full bg-slate-800/80 transition-all duration-300" title="Acción"></div>
+                        <div id="prog-seg-DESAFÍO" class="h-full flex-1 rounded-full bg-slate-800/80 transition-all duration-300" title="Desafío"></div>
+                        <div id="prog-seg-CONTEXTO" class="h-full flex-1 rounded-full bg-slate-800/80 transition-all duration-300" title="Contexto"></div>
+                    </div>
+
+                    <!-- Quick Dimension Chips: Interactive toggles with dynamic artwork thumbnails -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-0.5" id="dim-lock-chips">
+                        <button type="button" data-dim="CONCEPTO" class="dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs bg-slate-900/60 border-white/10 text-slate-300 hover:border-cyan-500/50 hover:bg-slate-800/80 group" title="Fijar o liberar dimensión Concepto">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="chip-thumb w-8 h-8 rounded-lg bg-cover bg-center border border-cyan-500/40 shrink-0 shadow-sm transition-transform group-hover:scale-105" style="background-image: url('/backgrounds/bg-1.png');"></div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-[10px]">💡</span>
+                                        <span class="font-display font-bold text-[10px] tracking-wider text-cyan-300 uppercase">Concepto</span>
+                                    </div>
+                                    <div class="chip-val-label text-[11px] font-medium text-white truncate max-w-[130px]">Concepto Guía</div>
+                                </div>
+                            </div>
+                            <span class="chip-lock-icon text-xs opacity-50 shrink-0 pr-1">🔓</span>
+                        </button>
+
+                        <button type="button" data-dim="ACCIÓN" class="dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs bg-slate-900/60 border-white/10 text-slate-300 hover:border-amber-500/50 hover:bg-slate-800/80 group" title="Fijar o liberar dimensión Acción">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="chip-thumb w-8 h-8 rounded-lg bg-cover bg-center border border-amber-500/40 shrink-0 shadow-sm transition-transform group-hover:scale-105" style="background-image: url('/backgrounds/bg-2.png');"></div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-[10px]">🛠️</span>
+                                        <span class="font-display font-bold text-[10px] tracking-wider text-amber-300 uppercase">Acción</span>
+                                    </div>
+                                    <div class="chip-val-label text-[11px] font-medium text-white truncate max-w-[130px]">Acción Principal</div>
+                                </div>
+                            </div>
+                            <span class="chip-lock-icon text-xs opacity-50 shrink-0 pr-1">🔓</span>
+                        </button>
+
+                        <button type="button" data-dim="DESAFÍO" class="dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs bg-slate-900/60 border-white/10 text-slate-300 hover:border-rose-500/50 hover:bg-slate-800/80 group" title="Fijar o liberar dimensión Desafío">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="chip-thumb w-8 h-8 rounded-lg bg-cover bg-center border border-rose-500/40 shrink-0 shadow-sm transition-transform group-hover:scale-105" style="background-image: url('/backgrounds/bg-3.png');"></div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-[10px]">🔥</span>
+                                        <span class="font-display font-bold text-[10px] tracking-wider text-rose-300 uppercase">Desafío</span>
+                                    </div>
+                                    <div class="chip-val-label text-[11px] font-medium text-white truncate max-w-[130px]">Fricción Crítica</div>
+                                </div>
+                            </div>
+                            <span class="chip-lock-icon text-xs opacity-50 shrink-0 pr-1">🔓</span>
+                        </button>
+
+                        <button type="button" data-dim="CONTEXTO" class="dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs bg-slate-900/60 border-white/10 text-slate-300 hover:border-emerald-500/50 hover:bg-slate-800/80 group" title="Fijar o liberar dimensión Contexto">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="chip-thumb w-8 h-8 rounded-lg bg-cover bg-center border border-emerald-500/40 shrink-0 shadow-sm transition-transform group-hover:scale-105" style="background-image: url('/backgrounds/bg-4.png');"></div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-[10px]">🌍</span>
+                                        <span class="font-display font-bold text-[10px] tracking-wider text-emerald-300 uppercase">Contexto</span>
+                                    </div>
+                                    <div class="chip-val-label text-[11px] font-medium text-white truncate max-w-[130px]">Ecosistema Situado</div>
+                                </div>
+                            </div>
+                            <span class="chip-lock-icon text-xs opacity-50 shrink-0 pr-1">🔓</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 4 CHALLENGE CARDS (Interactive Deck) -->
                 <div id="challenge-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Cards are dynamically injected with individual re-roll & tactile interactions -->
@@ -292,27 +566,61 @@
                     <p id="challenge-summary-text" class="text-base text-slate-200 font-medium leading-relaxed"></p>
                 </div>
 
-                <!-- SOLUTION PATHWAYS BAR -->
-                <div id="solution-choices" class="flex flex-wrap items-center justify-center gap-3">
-                    <button id="nucleo-solution-btn" class="px-5 py-2.5 rounded-xl font-sans text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 transition-all shadow-md shadow-cyan-500/10 flex items-center gap-2 active:scale-95">
-                        <span>⚡ Solución Motor Núcleo</span>
-                        <span class="text-[10px] font-mono bg-cyan-950/40 text-cyan-950 px-1.5 py-0.5 rounded font-bold">0 Tokens</span>
+                <!-- SOLUTION PATHWAYS BAR: Interactive buttons with dynamic variable artwork backgrounds -->
+                <div id="solution-choices" class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
+                    <button id="nucleo-solution-btn" class="relative overflow-hidden group p-3.5 rounded-xl border border-cyan-500/40 shadow-lg text-left transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <div class="btn-art-backdrop absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style="background-image: url('/backgrounds/bg-1.png');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/80 to-cyan-950/70 group-hover:from-slate-950/85"></div>
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xl">⚡</span>
+                                <div>
+                                    <div class="font-display font-bold text-xs sm:text-sm text-white drop-shadow">Solución Motor Núcleo</div>
+                                    <div class="text-[10px] text-cyan-300/90 font-mono">Eje Concepto · Offline</div>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-mono bg-cyan-400 text-slate-950 px-2 py-0.5 rounded font-bold shadow-sm">0 Tokens</span>
+                        </div>
                     </button>
                     
-                    <button id="ai-solution-btn" class="px-5 py-2.5 rounded-xl font-sans text-xs sm:text-sm font-bold bg-slate-800 hover:bg-slate-700 text-white border border-fuchsia-500/30 hover:border-fuchsia-400/60 transition-all flex items-center gap-2 active:scale-95">
-                        <span id="ai-btn-text">🧠 Ideación con Motor Local IA</span>
-                        <span id="ai-btn-spinner" class="spinner-ring hidden"></span>
+                    <button id="standard-solution-btn" class="relative overflow-hidden group p-3.5 rounded-xl border border-amber-500/40 shadow-lg text-left transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <div class="btn-art-backdrop absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style="background-image: url('/backgrounds/bg-2.png');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/80 to-amber-950/70 group-hover:from-slate-950/85"></div>
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xl">📋</span>
+                                <div>
+                                    <div class="font-display font-bold text-xs sm:text-sm text-white drop-shadow">Guía Metodológica</div>
+                                    <div class="text-[10px] text-amber-300/90 font-mono">Eje Acción · 4 Fases</div>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-mono bg-amber-400/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-semibold">Taller</span>
+                        </div>
                     </button>
-                    
-                    <button id="standard-solution-btn" class="px-4 py-2.5 rounded-xl font-sans text-xs font-semibold text-slate-300 hover:text-white glass-panel hover:bg-slate-800 transition-colors flex items-center gap-1.5">
-                        <span>📋 Guía Metodológica en 4 Fases</span>
+
+                    <button id="ai-solution-btn" class="relative overflow-hidden group p-3.5 rounded-xl border border-fuchsia-500/40 shadow-lg text-left transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <div class="btn-art-backdrop absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style="background-image: url('/backgrounds/bg-3.png');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/80 to-fuchsia-950/70 group-hover:from-slate-950/85"></div>
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xl">🧠</span>
+                                <div>
+                                    <div id="ai-btn-text" class="font-display font-bold text-xs sm:text-sm text-white drop-shadow">Ideación Gemini IA</div>
+                                    <div class="text-[10px] text-fuchsia-300/90 font-mono">Eje Desafío · Flash Lite</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="ai-btn-spinner" class="spinner-ring hidden"></span>
+                                <span class="text-[10px] font-mono bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 px-2 py-0.5 rounded font-semibold">Max 250t</span>
+                            </div>
+                        </div>
                     </button>
                 </div>
 
                 <!-- LOADING INDICATOR -->
                 <div id="loading-indicator" class="hidden flex flex-col items-center justify-center py-8 glass-panel rounded-2xl border border-fuchsia-500/20">
                     <div class="spinner-ring w-8 h-8 border-t-fuchsia-400 mb-3"></div>
-                    <p class="text-sm font-medium text-slate-300">Consultando Motor Local...</p>
+                    <p class="text-sm font-medium text-slate-300">Consultando Gemini Flash Lite...</p>
                     <span class="text-xs text-slate-500 mt-1">Tope protegido: máx 250 tokens</span>
                 </div>
 
@@ -339,7 +647,36 @@
                         </div>
                     </div>
 
-                    <!-- Automatic Fallback Banner (if Motor Local had spikes) -->
+                    <!-- Solution Visual Art Banner (Núcleo Colectivo Dossier) -->
+                    <div id="solution-art-banner" class="w-full h-36 sm:h-44 rounded-xl overflow-hidden relative mb-5 border border-white/10 shadow-lg group/solart">
+                        <div id="solution-art-hero" class="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover/solart:scale-105"
+                             style="background-image: url('/backgrounds/bg-1.png');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20"></div>
+                        
+                        <div class="absolute top-3 left-3 flex items-center gap-2">
+                            <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-500/40">
+                                🎨 Ecosistema Visual Núcleo
+                            </span>
+                            <span id="solution-art-name" class="text-xs text-slate-200 bg-slate-950/70 backdrop-blur-md px-2 py-0.5 rounded border border-white/10">
+                                Obra 01 · Génesis Algorítmico
+                            </span>
+                        </div>
+
+                        <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-end justify-between gap-2">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Dossier Visual del Reto</p>
+                                <h4 class="text-white font-display font-bold text-xs sm:text-sm drop-shadow-md">
+                                    Matriz Artística en 4 Ejes
+                                </h4>
+                            </div>
+                            <!-- 4-Artwork Thumbnail Strip -->
+                            <div id="solution-art-strip" class="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md p-1.5 rounded-lg border border-white/10">
+                                <!-- Populated dynamically by JS with 4 mini thumbnails -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Automatic Fallback Banner (if Gemini had spikes) -->
                     <div id="solution-fallback-notice" class="hidden mb-4 p-3 rounded-xl bg-blue-950/60 border border-blue-500/40 text-blue-200 text-xs flex items-center gap-2">
                         <span>💡</span>
                         <span><strong>Respaldo Inteligente activado:</strong> La red de IA presentó alta demanda momentánea. Se activó el Motor Estratégico Núcleo sin consumir tokens ni retrasar tu sesión.</span>
@@ -383,7 +720,7 @@
                 <span>·</span>
                 <span class="text-emerald-400 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Motor Local Ready
+                    Gemini Flash Lite Ready
                 </span>
             </div>
         </footer>
@@ -505,21 +842,33 @@
 
                     <!-- 4 Dimensions Grid in Worksheet -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                        <div class="p-3 rounded-lg border border-cyan-500/30 bg-cyan-950/20">
-                            <span class="text-[10px] uppercase font-bold text-cyan-400">💡 Concepto</span>
-                            <div id="ws-concepto" class="text-sm font-semibold text-white mt-1"></div>
+                        <div class="p-3 rounded-lg border border-cyan-500/30 bg-cyan-950/20 flex flex-col justify-between">
+                            <div id="ws-art-concepto" class="w-full h-16 rounded bg-cover bg-center mb-2 border border-white/10 shadow-sm"></div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-cyan-400">💡 Concepto</span>
+                                <div id="ws-concepto" class="text-xs font-semibold text-white mt-0.5 leading-snug"></div>
+                            </div>
                         </div>
-                        <div class="p-3 rounded-lg border border-amber-500/30 bg-amber-950/20">
-                            <span class="text-[10px] uppercase font-bold text-amber-400">🛠️ Acción</span>
-                            <div id="ws-accion" class="text-sm font-semibold text-white mt-1"></div>
+                        <div class="p-3 rounded-lg border border-amber-500/30 bg-amber-950/20 flex flex-col justify-between">
+                            <div id="ws-art-accion" class="w-full h-16 rounded bg-cover bg-center mb-2 border border-white/10 shadow-sm"></div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-amber-400">🛠️ Acción</span>
+                                <div id="ws-accion" class="text-xs font-semibold text-white mt-0.5 leading-snug"></div>
+                            </div>
                         </div>
-                        <div class="p-3 rounded-lg border border-rose-500/30 bg-rose-950/20">
-                            <span class="text-[10px] uppercase font-bold text-rose-400">🔥 Desafío</span>
-                            <div id="ws-desafio" class="text-sm font-semibold text-white mt-1"></div>
+                        <div class="p-3 rounded-lg border border-rose-500/30 bg-rose-950/20 flex flex-col justify-between">
+                            <div id="ws-art-desafio" class="w-full h-16 rounded bg-cover bg-center mb-2 border border-white/10 shadow-sm"></div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-rose-400">🔥 Desafío</span>
+                                <div id="ws-desafio" class="text-xs font-semibold text-white mt-0.5 leading-snug"></div>
+                            </div>
                         </div>
-                        <div class="p-3 rounded-lg border border-emerald-500/30 bg-emerald-950/20">
-                            <span class="text-[10px] uppercase font-bold text-emerald-400">🌍 Contexto</span>
-                            <div id="ws-contexto" class="text-sm font-semibold text-white mt-1"></div>
+                        <div class="p-3 rounded-lg border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between">
+                            <div id="ws-art-contexto" class="w-full h-16 rounded bg-cover bg-center mb-2 border border-white/10 shadow-sm"></div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-emerald-400">🌍 Contexto</span>
+                                <div id="ws-contexto" class="text-xs font-semibold text-white mt-0.5 leading-snug"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -552,443 +901,1707 @@
         </div>
     </div>
 
+    <!-- MODAL 5: ARTWORK LIGHTBOX VIEWER -->
+    <div id="artwork-lightbox-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 hidden flex items-center justify-center p-4">
+        <div class="relative max-w-4xl w-full flex flex-col items-center animate-card-in">
+            <!-- Close button -->
+            <button id="close-lightbox-btn" class="absolute -top-12 right-0 text-slate-400 hover:text-white text-2xl p-2 rounded-lg hover:bg-slate-800 transition-colors z-20">
+                ✕
+            </button>
+            
+            <!-- Image Card -->
+            <div class="w-full glass-panel-elevated rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
+                <div class="relative w-full max-h-[68vh] flex items-center justify-center bg-black/40 overflow-hidden">
+                    <img id="lightbox-img" src="" alt="Obra Núcleo Colectivo" class="w-full h-auto max-h-[68vh] object-contain transition-transform duration-300">
+                </div>
+                
+                <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 bg-slate-950/90 border-t border-white/10">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span id="lightbox-dim-badge" class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border"></span>
+                            <span id="lightbox-file-badge" class="text-[11px] font-mono text-slate-400"></span>
+                        </div>
+                        <h3 id="lightbox-title" class="text-base sm:text-lg font-display font-bold text-white"></h3>
+                        <p id="lightbox-desc" class="text-xs text-slate-300 mt-0.5 font-light"></p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button id="lightbox-set-bg-btn" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-colors flex items-center gap-1.5 shadow-sm">
+                            <span>🎨</span>
+                            <span>Usar como Fondo</span>
+                        </button>
+                        <a id="lightbox-download-link" href="" target="_blank" download class="px-3 py-2 rounded-lg text-xs font-semibold glass-panel hover:bg-slate-800 text-slate-200 transition-colors flex items-center gap-1.5">
+                            <span>⬇️</span>
+                            <span>Descargar</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- ==========================================
          APPLICATION LOGIC & ENGINES
          ========================================== -->
-    <script type="module">\n
-const CATEGORIES = [
-  ["01","INTELIGENCIA ARTIFICIAL","IA como herramienta creativa","🧠","cyan"],
-  ["02","PROGRAMACIÓN CREATIVA","Código como lenguaje artístico","⌘","blue"],
-  ["03","DISEÑO CROSSMEDIA","Una idea que vive en múltiples medios","◈","violet"],
-  ["04","EXPERIENCIAS DIGITALES","Diseñar mundos, reglas e interacciones","🎮","amber"],
-  ["05","INSTALACIONES INTERACTIVAS","Del espectador al participante","✦","rose"],
-  ["06","APLICACIONES Y PROTOTIPOS","De una idea a algo que funciona","▣","emerald"],
-  ["07","NARRATIVAS Y STORYTELLING","Historias, personajes y mundos","✍️","fuchsia"],
-  ["08","AUDIO, RADIO Y PODCAST","Voz, sonido y escucha","◉","sky"],
-  ["09","ARTE Y CULTURA","Creación, memoria y patrimonio","🎨","orange"],
-  ["10","COMUNIDAD Y TRANSFORMACIÓN SOCIAL","Participación y colaboración","◎","green"],
-  ["11","DISEÑO Y COMUNICACIÓN","Identidad, editorial y comunicación visual","▤","pink"],
-  ["12","TERRITORIO, ECOLOGÍA Y FUTUROS","Ciudad, naturaleza y futuros posibles","🌱","lime"],
-  ["13","ÉTICA Y TECNOLOGÍA","Datos, autoría, privacidad y decisiones","⚖️","yellow"],
-  ["14","EDUCACIÓN Y APRENDIZAJE","Pedagogías experimentales y laboratorios","📚","indigo"],
-  ["15","CIENCIA Y VISUALIZACIÓN","Datos, ciencia y representación","🔬","teal"],
-  ["16","FABRICACIÓN Y MATERIA","Objetos, sensores y prototipos físicos","⚙️","slate"]
-];
+    <script type="module">
+        // 1. DATA MATRICES FOR NÚCLEO COLECTIVO
+        const conceptos = [
+            "Sostenibilidad Artesanal", "Innovación Social Digital", "Educación Inmersiva", 
+            "Salud Comunitaria Preventiva", "Cultura Urbana Regenerativa", "Turismo Experiencial Local", 
+            "Memoria Histórica Digital", "Economía Circular Textil", "Gamificación para el Cambio Social", 
+            "Arte y Neurociencia", "Diseño Biofílico Urbano", "Soberanía Alimentaria Tecnológica"
+        ];
+        
+        const acciones = [
+            "Organizar Talleres Comunitarios", "Desarrollar una Plataforma Digital", "Crear una Instalación de Arte Público", 
+            "Lanzar una Campaña de Concienciación", "Diseñar un Programa de Voluntariado", "Producir un Documental Interactivo", 
+            "Crear un Laboratorio Ciudadano", "Establecer una Red de Trueque", "Lanzar un Podcast Colaborativo", 
+            "Diseñar una Experiencia de Realidad Aumentada", "Publicar un Fanzine Colectivo", "Mapear Activos Comunitarios"
+        ];
+        
+        const desafios = [
+            "Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", 
+            "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo", 
+            "Gentrificación Cultural", "Brecha Generacional", "Desinformación y Noticias Falsas", 
+            "Apatía Política", "Saturación del Mercado", "Vandalismo y Falta de Cuidado"
+        ];
+        
+        const contextos = [
+            "una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", 
+            "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido", 
+            "una Biblioteca Pública", "un Barrio Histórico en Transformación", "una Plataforma de Streaming", 
+            "un Festival de Música Independiente", "un Hospital Público", "una Antigua Zona Industrial"
+        ];
 
-const PACKS = {
-"01": {
-concepto:["IA generativa responsable","co-creación humano-máquina","alfabetización algorítmica","memoria aumentada"],
-medio:["asistente conversacional","imagen generativa","mapa interactivo","prototipo web"],
-accion:["investigar y contrastar","imaginar escenarios","transformar una colección","prototipar una experiencia"],
-restriccion:["no usar generación automática de imágenes","citar las fuentes y decisiones humanas","trabajar con datos públicos","mantener una versión completamente local"],
-contexto:["un archivo comunitario","un aula universitaria","un colectivo artístico","un barrio con memoria cultural"],
-desafio:["sesgos y representación","dependencia de herramientas","autoría y atribución","acceso desigual a la tecnología"]
-},
-"02": {
-concepto:["algoritmos poéticos","visualización generativa","código como materia","interacción emergente"],
-medio:["p5.js","Processing","canvas web","instalación audiovisual"],
-accion:["generar una composición","crear una interacción","traducir datos a formas","programar un comportamiento"],
-restriccion:["máximo 100 líneas de código","sin librerías externas","usar solo formas geométricas","el usuario debe modificar el resultado"],
-contexto:["una pantalla pública","un festival de arte","un laboratorio universitario","un sitio web experimental"],
-desafio:["hacer visible lo invisible","convertir reglas en estética","crear variación sin perder control","explicar el código a principiantes"]
-},
-"03": {
-concepto:["narrativa distribuida","universo transmedia","identidad expandida","participación multiplataforma"],
-medio:["web","redes sociales","video corto","instalación"],
-accion:["adaptar una historia","crear una campaña","conectar pistas","diseñar un recorrido"],
-restriccion:["usar tres medios distintos","cada medio debe aportar información nueva","no repetir el mismo contenido","crear una puerta de entrada sin contexto previo"],
-contexto:["un proyecto cultural","un festival","una iniciativa comunitaria","una exposición"],
-desafio:["mantener coherencia","evitar saturación","conectar audiencias distintas","convertir espectadores en participantes"]
-},
-"04": {
-concepto:["diseño de reglas","ficción interactiva","mecánicas de juego","mundo digital"],
-medio:["juego web","experiencia narrativa","prototipo interactivo","simulación"],
-accion:["crear una mecánica","diseñar un recorrido","convertir un problema en juego","construir un pequeño mundo"],
-restriccion:["una sola pantalla","sin tutorial escrito","partida de cinco minutos","solo tres reglas"],
-contexto:["un museo","un aula","una plaza virtual","una campaña cultural"],
-desafio:["hacer comprensible la interacción","mantener interés","equilibrar libertad y reglas","evitar recompensas obvias"]
-},
-"05": {
-concepto:["participación situada","sensibilidad corporal","espacio reactivo","presencia"],
-medio:["proyección","sonido espacial","sensor","luz"],
-accion:["activar un espacio","responder al movimiento","crear una atmósfera","transformar la experiencia del visitante"],
-restriccion:["sin gafas de realidad virtual","usar materiales accesibles","una interacción a la vez","debe poder observarse desde afuera"],
-contexto:["una galería","un espacio público","un centro cultural","un salón universitario"],
-desafio:["hacer visible la participación","evitar instrucciones complejas","integrar tecnología y espacio","crear una experiencia inclusiva"]
-},
-"06": {
-concepto:["mínimo producto viable","herramientas abiertas","diseño centrado en personas","automatización accesible"],
-medio:["app web","dashboard","herramienta colaborativa","micrositio"],
-accion:["resolver una tarea","organizar información","automatizar un proceso","crear un servicio digital"],
-restriccion:["sin registro obligatorio","mobile first","funcionar con conexión limitada","prototipar en una tarde"],
-contexto:["una organización cultural","un colectivo","un pequeño negocio","una institución educativa"],
-desafio:["reducir complejidad","hacerlo accesible","mantenerlo sostenible","resolver una necesidad real"]
-},
-"07": {
-concepto:["memoria oral","personaje colectivo","ficción especulativa","archivo vivo"],
-medio:["cómic digital","microdocumental","historia interactiva","sitio narrativo"],
-accion:["crear personajes","reconstruir una historia","diseñar un universo","convertir testimonios en relato"],
-restriccion:["máximo cinco escenas","un solo personaje habla","el final debe quedar abierto","combinar hechos y ficción claramente señalada"],
-contexto:["un barrio","una familia","un archivo histórico","una comunidad rural"],
-desafio:["evitar estereotipos","diferenciar memoria y ficción","mantener múltiples voces","hacer atractiva una historia cotidiana"]
-},
-"08": {
-concepto:["paisaje sonoro","memoria auditiva","radio expandida","voz comunitaria"],
-medio:["podcast","radio web","pieza sonora","instalación auditiva"],
-accion:["recopilar sonidos","entrevistar personas","crear una ficción sonora","mapear voces"],
-restriccion:["sin música de fondo","máximo diez minutos","solo sonidos registrados en territorio","una voz debe guiar toda la pieza"],
-contexto:["un mercado","un barrio","una universidad","un territorio rural"],
-desafio:["escuchar antes de producir","dar protagonismo a otras voces","hacer visible un territorio con sonido","evitar ruido innecesario"]
-},
-"09": {
-concepto:["patrimonio vivo","arte comunitario","memoria colectiva","cultura popular"],
-medio:["exposición","publicación","mural","archivo digital"],
-accion:["reinterpretar un patrimonio","crear una colección","documentar saberes","activar una pieza"],
-restriccion:["trabajar con materiales locales","incluir voces de la comunidad","no romantizar el pasado","dejar una copia abierta del resultado"],
-contexto:["un barrio histórico","una biblioteca","un museo comunitario","un festival local"],
-desafio:["actualizar sin borrar","hacer accesible el patrimonio","evitar apropiación","conectar generaciones"]
-},
-"10": {
-concepto:["co-diseño","inteligencia colectiva","cuidado comunitario","innovación social"],
-medio:["taller","mapa colectivo","plataforma comunitaria","intervención pública"],
-accion:["escuchar necesidades","crear acuerdos","prototipar con participantes","activar una red"],
-restriccion:["la comunidad toma decisiones","no depender de una sola persona","devolver los resultados al territorio","trabajar con recursos existentes"],
-contexto:["un barrio","una escuela","una organización social","un espacio comunitario"],
-desafio:["participación real","continuidad del proyecto","diversidad de voces","convertir conversación en acción"]
-},
-"11": {
-concepto:["sistema visual","tipografía experimental","diseño editorial","comunicación accesible"],
-medio:["cartel","publicación digital","identidad visual","infografía"],
-accion:["traducir información","crear una identidad","organizar contenido","diseñar una campaña"],
-restriccion:["máximo dos tipografías","funcionar en blanco y negro","una sola pieza base","debe entenderse en cinco segundos"],
-contexto:["un evento cultural","una organización","una campaña educativa","un proyecto independiente"],
-desafio:["jerarquizar información","evitar ruido visual","hacer accesible el mensaje","mantener identidad entre formatos"]
-},
-"12": {
-concepto:["futuros urbanos","ecología cotidiana","diseño regenerativo","cartografía afectiva"],
-medio:["mapa","experiencia web","instalación","visualización"],
-accion:["imaginar escenarios","mapear recursos","hacer visible un impacto","diseñar una alternativa"],
-restriccion:["usar datos del territorio","no presentar una solución única","incluir una acción cotidiana","hacer visible una consecuencia a largo plazo"],
-contexto:["una ciudad","un río","un barrio","un parque"],
-desafio:["pasar del diagnóstico a la acción","hacer comprensible el cambio","evitar futuros genéricos","conectar escalas local y global"]
-},
-"13": {
-concepto:["privacidad por diseño","sesgo algorítmico","autoría digital","soberanía de datos"],
-medio:["experimento interactivo","guía visual","simulación","prototipo educativo"],
-accion:["evidenciar un riesgo","diseñar una alternativa","hacer una auditoría","crear una situación hipotética"],
-restriccion:["no recolectar datos personales","explicar cada decisión","usar datos sintéticos","permitir abandonar la experiencia"],
-contexto:["un aula","una plataforma digital","una organización","un laboratorio"],
-desafio:["hacer visible una consecuencia","evitar miedo tecnológico","equilibrar utilidad y privacidad","explicar decisiones complejas"]
-},
-"14": {
-concepto:["aprendizaje haciendo","pedagogía lúdica","aprendizaje entre pares","aula expandida"],
-medio:["juego educativo","kit","plataforma","laboratorio"],
-accion:["crear un desafío","diseñar una dinámica","convertir un tema en experiencia","construir una herramienta docente"],
-restriccion:["sin presentación de diapositivas","máximo 20 minutos","debe permitir colaboración","el participante produce algo"],
-contexto:["una universidad","una escuela","un taller comunitario","un curso virtual"],
-desafio:["mantener participación","aprender sin memorizar","adaptarse a distintos niveles","evaluar sin examen tradicional"]
-},
-"15": {
-concepto:["datos como narrativa","visualización científica","ciencia ciudadana","patrones ocultos"],
-medio:["gráfico interactivo","mapa de datos","animación","instalación"],
-accion:["traducir datos","comparar variables","contar una historia con evidencia","crear una exploración visual"],
-restriccion:["una sola variable principal","fuentes visibles","sin gráficos predeterminados","el usuario debe descubrir algo"],
-contexto:["un laboratorio","un museo de ciencia","una universidad","un proyecto ciudadano"],
-desafio:["evitar interpretaciones engañosas","hacer comprensible lo complejo","mostrar incertidumbre","conectar datos con experiencia"]
-},
-"16": {
-concepto:["prototipado material","electrónica creativa","objetos sensibles","fabricación abierta"],
-medio:["Arduino","sensor","objeto físico","prototipo híbrido"],
-accion:["construir un dispositivo","hacer reaccionar un objeto","crear una interfaz física","prototipar una interacción"],
-restriccion:["máximo tres componentes","usar materiales recuperados","sin carcasa comercial","debe poder explicarse en un minuto"],
-contexto:["un taller maker","una exposición","un espacio público","un laboratorio universitario"],
-desafio:["integrar materia y código","hacerlo reparable","reducir componentes","crear una interacción intuitiva"]
-}
-};
+        const cardStyles = {
+            CONCEPTO: { 
+                emoji: "💡", 
+                color: "cyan", 
+                border: "border-cyan-500/50 hover:border-cyan-400", 
+                badgeBorder: "border-cyan-500/40",
+                text: "text-cyan-300", 
+                glow: "shadow-cyan-500/25",
+                artworks: ['/backgrounds/bg-1.png', '/backgrounds/bg-5.png', '/backgrounds/bg-9.png', '/backgrounds/background-11-ar-reality.jpg', '/backgrounds/background-14-cosmic-digital.jpg', '/backgrounds/background-23-neural-art.jpg', '/backgrounds/background-28-synesthesia-senses.jpg']
+            },
+            ACCIÓN: { 
+                emoji: "🛠️", 
+                color: "amber", 
+                border: "border-amber-500/50 hover:border-amber-400", 
+                badgeBorder: "border-amber-500/40",
+                text: "text-amber-300", 
+                glow: "shadow-amber-500/25",
+                artworks: ['/backgrounds/bg-2.png', '/backgrounds/bg-6.png', '/backgrounds/bg-10.png', '/backgrounds/background-13-cinema-film.jpg', '/backgrounds/background-16-dance-flow.jpg', '/backgrounds/background-17-digital-symphony.jpg', '/backgrounds/background-19-lab-creative.jpg', '/backgrounds/background-22-music-symphony.jpg', '/backgrounds/background-24-pencil-paint.jpg']
+            },
+            DESAFÍO: { 
+                emoji: "🔥", 
+                color: "rose", 
+                border: "border-rose-500/50 hover:border-rose-400", 
+                badgeBorder: "border-rose-500/40",
+                text: "text-rose-300", 
+                glow: "shadow-rose-500/25",
+                artworks: ['/backgrounds/bg-3.png', '/backgrounds/bg-7.png', '/backgrounds/background-15-cubism-paint.jpg', '/backgrounds/background-20-literature-words.jpg', '/backgrounds/background-26-popart-paint.jpg', '/backgrounds/background-30-theater-drama.jpg']
+            },
+            CONTEXTO: { 
+                emoji: "🌍", 
+                color: "emerald", 
+                border: "border-emerald-500/50 hover:border-emerald-400", 
+                badgeBorder: "border-emerald-500/40",
+                text: "text-emerald-300", 
+                glow: "shadow-emerald-500/25",
+                artworks: ['/backgrounds/bg-4.png', '/backgrounds/bg-8.png', '/backgrounds/background-12-biology-science.jpg', '/backgrounds/background-18-impressionism-paint.jpg', '/backgrounds/background-21-modernism-paint.jpg', '/backgrounds/background-25-photography-lens.jpg', '/backgrounds/background-27-sculpture-digital.jpg', '/backgrounds/background-29-textile-weaving.jpg']
+            }
+        };
 
-const CARD_STYLES = {
-  CATEGORIA:{emoji:"◈",border:"border-violet-500/40",text:"text-violet-300",bg:"bg-violet-950/20"},
-  CONCEPTO:{emoji:"💡",border:"border-cyan-500/40",text:"text-cyan-300",bg:"bg-cyan-950/20"},
-  MEDIO:{emoji:"◉",border:"border-sky-500/40",text:"text-sky-300",bg:"bg-sky-950/20"},
-  ACCION:{emoji:"🛠️",border:"border-amber-500/40",text:"text-amber-300",bg:"bg-amber-950/20"},
-  RESTRICCION:{emoji:"⛓️",border:"border-rose-500/40",text:"text-rose-300",bg:"bg-rose-950/20"},
-  CONTEXTO:{emoji:"🌍",border:"border-emerald-500/40",text:"text-emerald-300",bg:"bg-emerald-950/20"},
-  DESAFIO:{emoji:"🔥",border:"border-fuchsia-500/40",text:"text-fuchsia-300",bg:"bg-fuchsia-950/20"}
-};
+        // 1.1 CATÁLOGO EXPANDIDO DE LAS 30 OBRAS VISUALES DE NÚCLEO COLECTIVO
+        const nucleoArtworks = [
+            { id: 1, file: 'bg-1.png', url: '/backgrounds/bg-1.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-1.png', title: 'Génesis Algorítmico', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Exploración de estructuras generativas, código computacional y patrones lógicos emergentes.' },
+            { id: 2, file: 'bg-2.png', url: '/backgrounds/bg-2.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-2.png', title: 'Acción Colectiva', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Ensamblaje ciudadano, dinámicas de prototipado horizontal y sinergias comunitarias.' },
+            { id: 3, file: 'bg-3.png', url: '/backgrounds/bg-3.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-3.png', title: 'Tensión Crítica', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'Fricciones socio-ecológicas, contradicciones urbanas y dilemas transformativos.' },
+            { id: 4, file: 'bg-4.png', url: '/backgrounds/bg-4.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-4.png', title: 'Territorio & Raíces', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Biósfera situada, memoria del suelo, agua y saberes del territorio local.' },
+            { id: 5, file: 'bg-5.png', url: '/backgrounds/bg-5.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-5.png', title: 'Redes Abiertas', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Conectividad descentralizada, flujos P2P y sabiduría colectiva libre.' },
+            { id: 6, file: 'bg-6.png', url: '/backgrounds/bg-6.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-6.png', title: 'Materia & Oficio', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Artesanía contemporánea, experimentación material y saber del cuerpo.' },
+            { id: 7, file: 'bg-7.png', url: '/backgrounds/bg-7.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-7.png', title: 'Resistencia Cultural', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'Soberanía estética, descolonización tecnológica y narrativas autónomas.' },
+            { id: 8, file: 'bg-8.png', url: '/backgrounds/bg-8.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-8.png', title: 'Biósfera Viva', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Coexistencia multiespecie, ecologías urbanas e interdependencia vital.' },
+            { id: 9, file: 'bg-9.png', url: '/backgrounds/bg-9.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-9.png', title: 'Horizonte Poético', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Especulación sensible, futuros compartidos e imaginación artística.' },
+            { id: 10, file: 'bg-10.png', url: '/backgrounds/bg-10.png', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/bg-10.png', title: 'Convergencia Futura', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Alianzas híbridas entre saberes ancestrales y herramientas del porvenir.' },
+            { id: 11, file: 'background-11-ar-reality.jpg', url: '/backgrounds/background-11-ar-reality.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-11-ar-reality.jpg', title: 'Realidad Aumentada & Espacio Inmersivo', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Superposición digital sobre el mundo físico, capas aumentadas e interacción espacial.' },
+            { id: 12, file: 'background-12-biology-science.jpg', url: '/backgrounds/background-12-biology-science.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-12-biology-science.jpg', title: 'Biología, Ciencia & Biomimética', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Estructuras orgánicas, síntesis biológica, micro-organismos y regeneración de ecosistemas.' },
+            { id: 13, file: 'background-13-cinema-film.jpg', url: '/backgrounds/background-13-cinema-film.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-13-cinema-film.jpg', title: 'Cine & Narrativa Audiovisual', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Montaje cinematográfico, relato no lineal, estética del fotograma y memoria fílmica.' },
+            { id: 14, file: 'background-14-cosmic-digital.jpg', url: '/backgrounds/background-14-cosmic-digital.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-14-cosmic-digital.jpg', title: 'Cosmos & Neurociencia Digital', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Paisajes astronómicos, redes sinápticas, especulación espacial e infinitos cuánticos.' },
+            { id: 15, file: 'background-15-cubism-paint.jpg', url: '/backgrounds/background-15-cubism-paint.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-15-cubism-paint.jpg', title: 'Cubismo & Fractura Espacial', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'Planos dislocados, múltiples perspectivas simultáneas y desconstrucción formal.' },
+            { id: 16, file: 'background-16-dance-flow.jpg', url: '/backgrounds/background-16-dance-flow.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-16-dance-flow.jpg', title: 'Danza, Movimiento & Flujo Corporal', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Cinética viva, trazo del cuerpo en el espacio, ritmo coreográfico y energía cinética.' },
+            { id: 17, file: 'background-17-digital-symphony.jpg', url: '/backgrounds/background-17-digital-symphony.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-17-digital-symphony.jpg', title: 'Sinfonía Digital & Paisaje Sonoro', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Espectrogramas sonoros, frecuencias lumínicas, síntesis de audio y resonancia acústica.' },
+            { id: 18, file: 'background-18-impressionism-paint.jpg', url: '/backgrounds/background-18-impressionism-paint.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-18-impressionism-paint.jpg', title: 'Impresionismo & Atmósfera Lumínica', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Pincelada vibrante, estudio de la luz fugaz sobre paisajes urbanos y naturaleza viva.' },
+            { id: 19, file: 'background-19-lab-creative.jpg', url: '/backgrounds/background-19-lab-creative.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-19-lab-creative.jpg', title: 'Laboratorio Creativo & Prototipado', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Mesas de trabajo, herramientas maker, experimentación matérica e inventiva directa.' },
+            { id: 20, file: 'background-20-literature-words.jpg', url: '/backgrounds/background-20-literature-words.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-20-literature-words.jpg', title: 'Literatura, Tipografía & Memoria', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'Palabra impresa, palimpsesto editorial, fanzines de resistencia y caligrafía viva.' },
+            { id: 21, file: 'background-21-modernism-paint.jpg', url: '/backgrounds/background-21-modernism-paint.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-21-modernism-paint.jpg', title: 'Modernismo & Arquitectura Social', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Geometría constructiva, utopías urbanas, hormigón y orden espacial colectivo.' },
+            { id: 22, file: 'background-22-music-symphony.jpg', url: '/backgrounds/background-22-music-symphony.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-22-music-symphony.jpg', title: 'Música & Armonía Comunitaria', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'Orquestación colaborativa, polifonía social y acordes que unen comunidades.' },
+            { id: 23, file: 'background-23-neural-art.jpg', url: '/backgrounds/background-23-neural-art.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-23-neural-art.jpg', title: 'Arte Neural, IA & Código Abierto', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Redes neuronales artificiales, tensores de aprendizaje profundo y creatividad algorítmica.' },
+            { id: 24, file: 'background-24-pencil-paint.jpg', url: '/backgrounds/background-24-pencil-paint.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-24-pencil-paint.jpg', title: 'Oficio Manual, Trazado & Carbón', dimension: 'ACCIÓN', dimIcon: '🛠️', desc: 'El gesto de la mano, grafito crudo, bocetaje directo y rigor del dibujo artesanal.' },
+            { id: 25, file: 'background-25-photography-lens.jpg', url: '/backgrounds/background-25-photography-lens.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-25-photography-lens.jpg', title: 'Fotografía & Lente Documental', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Captura del instante decisivo, óptica analógica, grano de plata y testimonio visual.' },
+            { id: 26, file: 'background-26-popart-paint.jpg', url: '/backgrounds/background-26-popart-paint.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-26-popart-paint.jpg', title: 'Pop Art, Gráfica & Activismo', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'Colores saturados, semiótica de consumo, serigrafía popular y gráfica disidente.' },
+            { id: 27, file: 'background-27-sculpture-digital.jpg', url: '/backgrounds/background-27-sculpture-digital.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-27-sculpture-digital.jpg', title: 'Escultura Digital & Espacio Público', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Volumetría tridimensional, monumentos efímeros y plástica expandida en la ciudad.' },
+            { id: 28, file: 'background-28-synesthesia-senses.jpg', url: '/backgrounds/background-28-synesthesia-senses.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-28-synesthesia-senses.jpg', title: 'Sinestesia & Percepción Multisensorial', dimension: 'CONCEPTO', dimIcon: '💡', desc: 'Cruce de sentidos, colores audibles, texturas luminosas e inmersión cognitiva.' },
+            { id: 29, file: 'background-29-textile-weaving.jpg', url: '/backgrounds/background-29-textile-weaving.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-29-textile-weaving.jpg', title: 'Textil, Telar & Sabiduría Ancestral', dimension: 'CONTEXTO', dimIcon: '🌍', desc: 'Urdimbres comunitarias, teñido vegetal, tramas táctiles y artesanía de resistencia.' },
+            { id: 30, file: 'background-30-theater-drama.jpg', url: '/backgrounds/background-30-theater-drama.jpg', fallback: 'https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-30-theater-drama.jpg', title: 'Teatro, Catarsis & Dramaturgia', dimension: 'DESAFÍO', dimIcon: '🔥', desc: 'La escena como espejo ético, conflicto dramático, máscaras y catarsis colectiva.' }
+        ];
 
-const startScreen=document.getElementById("start-screen");
-const gameScreen=document.getElementById("game-screen");
-const startButton=document.getElementById("start-button");
-const challengeContainer=document.getElementById("challenge-container");
-const challengeSummary=document.getElementById("challenge-summary");
-const challengeSummaryText=document.getElementById("challenge-summary-text");
-const rerollAllBtn=document.getElementById("reroll-all-btn");
-const solutionChoices=document.getElementById("solution-choices");
-const solutionDisplay=document.getElementById("solution-display");
-const solutionTitle=document.getElementById("solution-title");
-const solutionBadge=document.getElementById("solution-badge");
-const solutionContent=document.getElementById("solution-content");
-const saveChallengeBtn=document.getElementById("save-challenge-btn");
-const saveBtnText=document.getElementById("save-btn-text");
-const exportSheetBtn=document.getElementById("export-sheet-btn");
-const copySummaryBtn=document.getElementById("copy-summary-btn");
-const copySummaryLabel=document.getElementById("copy-summary-label");
-const copySolutionBtn=document.getElementById("copy-solution-btn");
-const copySolutionText=document.getElementById("copy-solution-text");
-const savedModal=document.getElementById("saved-challenges-modal");
-const savedList=document.getElementById("saved-list");
-const savedSearchInput=document.getElementById("saved-search-input");
-const savedBadgeCount=document.getElementById("saved-badge-count");
-const modalSavedCount=document.getElementById("modal-saved-count");
-const methodModal=document.getElementById("method-modal");
-const exportModal=document.getElementById("export-modal");
-const navSavedBtn=document.getElementById("nav-saved-btn");
-const navMethodBtn=document.getElementById("nav-method-btn");
-const navDeckBtn=document.getElementById("nav-deck-btn");
-const quickMethodBtn=document.getElementById("quick-method-btn");
-const footerMethodLink=document.getElementById("footer-method-link");
-const soundToggleBtn=document.getElementById("sound-toggle-btn");
-const soundIcon=document.getElementById("sound-icon");
+        // 1.2 MAPEO SEMÁNTICO PRECISO DE TODAS LAS 48 VARIABLES HACIA LAS 30 OBRAS
+        const variableArtworkMap = {
+            // CONCEPTOS (12)
+            "Inteligencia Artificial Generativa": nucleoArtworks[22], // Obra 23: background-23-neural-art.jpg
+            "Arte Generativo y Código Creativo": nucleoArtworks[0],  // Obra 01: bg-1.png
+            "Biomimética y Naturaleza": nucleoArtworks[11],          // Obra 12: background-12-biology-science.jpg
+            "Narrativas Transmedia": nucleoArtworks[12],             // Obra 13: background-13-cinema-film.jpg
+            "Diseño Especulativo": nucleoArtworks[13],               // Obra 14: background-14-cosmic-digital.jpg
+            "Economía Circular": nucleoArtworks[28],                 // Obra 29: background-29-textile-weaving.jpg
+            "Soberanía Tecnológica": nucleoArtworks[4],              // Obra 05: bg-5.png
+            "Realidad Aumentada y Mixta": nucleoArtworks[10],        // Obra 11: background-11-ar-reality.jpg
+            "Arqueología de Medios": nucleoArtworks[24],             // Obra 25: background-25-photography-lens.jpg
+            "Sinestesia y Percepción": nucleoArtworks[27],           // Obra 28: background-28-synesthesia-senses.jpg
+            "Comunidades de Aprendizaje": nucleoArtworks[1],         // Obra 02: bg-2.png
+            "Justicia de Datos": nucleoArtworks[8],                  // Obra 09: bg-9.png
 
-let soundEnabled=true,audioReady=false,clickSynth,startSynth,successSynth;
-let lockedCards={CONCEPTO:false,MEDIO:false,ACCION:false,RESTRICCION:false,CONTEXTO:false,DESAFIO:false};
-let currentCategory="ALL";
-let currentChallenge={id:"",category:"",categoryName:"",concepto:"",medio:"",accion:"",restriccion:"",contexto:"",desafio:"",date:""};
-let currentSolution="";
+            // ACCIONES (12)
+            "Crear una Instalación Interactiva": nucleoArtworks[18], // Obra 19: background-19-lab-creative.jpg
+            "Componer una Pieza Sonora Generativa": nucleoArtworks[16], // Obra 17: background-17-digital-symphony.jpg
+            "Desarrollar un Tejido Inteligente con Sensores": nucleoArtworks[28], // Obra 29: background-29-textile-weaving.jpg
+            "Impartir un Taller de Código Creativo": nucleoArtworks[5], // Obra 06: bg-6.png
+            "Construir un Dispositivo Físico con Arduino": nucleoArtworks[9], // Obra 10: bg-10.png
+            "Producir un Cortometraje Experimental": nucleoArtworks[12], // Obra 13: background-13-cinema-film.jpg
+            "Diseñar un Videojuego con Impacto Social": nucleoArtworks[10], // Obra 11: background-11-ar-reality.jpg
+            "Coreografiar una Danza Aumentada": nucleoArtworks[15], // Obra 16: background-16-dance-flow.jpg
+            "Intervenir un Espacio Público con Mapping": nucleoArtworks[26], // Obra 27: background-27-sculpture-digital.jpg
+            "Diseñar una Experiencia de Realidad Aumentada": nucleoArtworks[10], // Obra 11: background-11-ar-reality.jpg
+            "Publicar un Fanzine Colectivo": nucleoArtworks[19], // Obra 20: background-20-literature-words.jpg
+            "Mapear Activos Comunitarios": nucleoArtworks[1], // Obra 02: bg-2.png
 
-function getCategory(id){return CATEGORIES.find(c=>c[0]===id);}
-function getPool(id,key){return id==="ALL"?CATEGORIES.flatMap(c=>(PACKS[c[0]]?.[key]||[])):PACKS[id]?.[key]||[];}
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function makeId(){return "RET-"+Math.random().toString(36).slice(2,8).toUpperCase();}
+            // DESAFÍOS (12)
+            "Falta de Recursos Económicos": nucleoArtworks[2], // Obra 03: bg-3.png
+            "Desinterés Comunitario": nucleoArtworks[29], // Obra 30: background-30-theater-drama.jpg
+            "Barreras Tecnológicas": nucleoArtworks[6], // Obra 07: bg-7.png
+            "Competencia con Grandes Corporaciones": nucleoArtworks[14], // Obra 15: background-15-cubism-paint.jpg
+            "Regulaciones Gubernamentales Estrictas": nucleoArtworks[20], // Obra 21: background-21-modernism-paint.jpg
+            "Impacto Ambiental Negativo": nucleoArtworks[7], // Obra 08: bg-8.png
+            "Gentrificación Cultural": nucleoArtworks[25], // Obra 26: background-26-popart-paint.jpg
+            "Brecha Generacional": nucleoArtworks[23], // Obra 24: background-24-pencil-paint.jpg
+            "Desinformación y Noticias Falsas": nucleoArtworks[19], // Obra 20: background-20-literature-words.jpg
+            "Apatía Política": nucleoArtworks[29], // Obra 30: background-30-theater-drama.jpg
+            "Saturación del Mercado": nucleoArtworks[25], // Obra 26: background-26-popart-paint.jpg
+            "Vandalismo y Falta de Cuidado": nucleoArtworks[14], // Obra 15: background-15-cubism-paint.jpg
 
-function categoryName(){
-  return currentCategory==="ALL" ? "Todas las categorías" : getCategory(currentCategory)[1];
-}
+            // CONTEXTOS (12)
+            "una Comunidad Rural Aislada": nucleoArtworks[3], // Obra 04: bg-4.png
+            "un Centro Cultural Urbano": nucleoArtworks[26], // Obra 27: background-27-sculpture-digital.jpg
+            "una Escuela Pública con Bajos Recursos": nucleoArtworks[23], // Obra 24: background-24-pencil-paint.jpg
+            "un Mercado Local de Artesanos": nucleoArtworks[28], // Obra 29: background-29-textile-weaving.jpg
+            "un Espacio Digital Descentralizado (Metaverso)": nucleoArtworks[13], // Obra 14: background-14-cosmic-digital.jpg
+            "un Parque Natural Protegido": nucleoArtworks[11], // Obra 12: background-12-biology-science.jpg
+            "una Biblioteca Pública": nucleoArtworks[19], // Obra 20: background-20-literature-words.jpg
+            "un Barrio Histórico en Transformación": nucleoArtworks[17], // Obra 18: background-18-impressionism-paint.jpg
+            "una Plataforma de Streaming": nucleoArtworks[24], // Obra 25: background-25-photography-lens.jpg
+            "un Festival de Música Independiente": nucleoArtworks[21], // Obra 22: background-22-music-symphony.jpg
+            "un Hospital Público": nucleoArtworks[27], // Obra 28: background-28-synesthesia-senses.jpg
+            "una Antigua Zona Industrial": nucleoArtworks[20] // Obra 21: background-21-modernism-paint.jpg
+        };
 
-function injectCategoryUI(){
-  const old=document.getElementById("reto-category-panel");
-  if(old) old.remove();
-  const panel=document.createElement("div");
-  panel.id="reto-category-panel";
-  panel.className="glass-panel rounded-2xl p-4 border border-white/10 mb-4";
-  panel.innerHTML=`
-    <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-      <div>
-        <div class="text-[10px] uppercase tracking-[.2em] text-cyan-400 font-bold">Universo de RETO</div>
-        <div class="text-sm text-slate-300 mt-1"><strong class="text-white">${CATEGORIES.length} categorías</strong> · combinaciones locales · sin IA</div>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-2">
-        <select id="reto-category-select" class="bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none">
-          <option value="ALL">◈ TODAS LAS CATEGORÍAS</option>
-          ${CATEGORIES.map(c=>`<option value="${c[0]}">${c[0]} · ${c[1]}</option>`).join("")}
-        </select>
-        <button id="reto-random-category" class="px-3 py-2 rounded-lg bg-violet-500/20 text-violet-200 border border-violet-500/30 text-xs font-bold">⚡ Categoría sorpresa</button>
-      </div>
-    </div>
-    <div id="reto-category-chips" class="flex gap-1.5 overflow-x-auto pt-3 pb-1">
-      ${CATEGORIES.map(c=>`<button data-cat="${c[0]}" class="reto-chip shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-white/10 text-slate-400 hover:text-white hover:border-violet-400/40">${c[0]} · ${c[1]}</button>`).join("")}
-    </div>`;
-  challengeContainer.parentElement.insertBefore(panel,challengeContainer);
-  const select=document.getElementById("reto-category-select");
-  select.value=currentCategory;
-  select.addEventListener("change",()=>{currentCategory=select.value;updateCategoryUI();generateFullChallenge();});
-  document.getElementById("reto-random-category").addEventListener("click",()=>{currentCategory=pick(CATEGORIES)[0];updateCategoryUI();generateFullChallenge();});
-  panel.querySelectorAll(".reto-chip").forEach(b=>b.addEventListener("click",()=>{currentCategory=b.dataset.cat;updateCategoryUI();generateFullChallenge();}));
-}
-function updateCategoryUI(){
-  const select=document.getElementById("reto-category-select"); if(select) select.value=currentCategory;
-  document.querySelectorAll(".reto-chip").forEach(b=>{
-    const active=b.dataset.cat===currentCategory;
-    b.classList.toggle("bg-violet-500/20",active); b.classList.toggle("text-violet-200",active); b.classList.toggle("text-slate-400",!active);
-  });
-}
+        // 1.3 RETRIEVES THE ARTWORK CORRESPONDING TO A GIVEN VARIABLE VALUE OR DIMENSION
+        function getArtworkForValue(value, dimension) {
+            if (value && variableArtworkMap[value]) {
+                return variableArtworkMap[value];
+            }
+            // Smart search by keyword
+            if (value) {
+                const lower = value.toLowerCase();
+                if (lower.includes('inteligencia') || lower.includes('neural')) return nucleoArtworks[22];
+                if (lower.includes('aumentada') || lower.includes('realidad')) return nucleoArtworks[10];
+                if (lower.includes('sonor') || lower.includes('música') || lower.includes('audio')) return nucleoArtworks[16];
+                if (lower.includes('cine') || lower.includes('cortometraje') || lower.includes('film')) return nucleoArtworks[12];
+                if (lower.includes('tejido') || lower.includes('textil') || lower.includes('artesano')) return nucleoArtworks[28];
+                if (lower.includes('danza') || lower.includes('movimiento')) return nucleoArtworks[15];
+                if (lower.includes('biología') || lower.includes('parque') || lower.includes('naturaleza')) return nucleoArtworks[11];
+                if (lower.includes('fanzine') || lower.includes('biblioteca') || lower.includes('literatura')) return nucleoArtworks[19];
+                if (lower.includes('escultura') || lower.includes('mapping') || lower.includes('urbano')) return nucleoArtworks[26];
+                if (lower.includes('teatro') || lower.includes('apatía') || lower.includes('comunitario')) return nucleoArtworks[29];
+                if (lower.includes('pop') || lower.includes('gentrificación')) return nucleoArtworks[25];
+                if (lower.includes('industrial') || lower.includes('arquitectura')) return nucleoArtworks[20];
+            }
+            // Deterministic hash fallback
+            const style = cardStyles[dimension];
+            if (style && style.artworks && style.artworks.length > 0) {
+                let hash = 0;
+                const str = value || dimension || 'NC';
+                for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+                const path = style.artworks[Math.abs(hash) % style.artworks.length];
+                return nucleoArtworks.find(a => a.url === path) || nucleoArtworks[0];
+            }
+            return nucleoArtworks[0];
+        }
 
-function filteredPool(key){
-  const activeId=currentCategory==="ALL" ? currentChallenge.category : currentCategory;
-  return getPool(activeId,key);
-}
+        // 2. AUDIO SYNTHS (TONE.JS)
+        let audioReady = false;
+        let soundEnabled = true;
+        let clickSynth, startSynth, aiSynth, successSynth;
 
-function generateFullChallenge(){
-  const cat=currentCategory==="ALL"?pick(CATEGORIES):getCategory(currentCategory);
-  const id=cat[0];
-  currentChallenge.category=id;
-  currentChallenge.categoryName=cat[1];
-  currentChallenge.id=makeId();
-  currentChallenge.date=new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
-  if(!lockedCards.CONCEPTO) currentChallenge.concepto=pick(filteredPool("concepto"));
-  if(!lockedCards.MEDIO) currentChallenge.medio=pick(filteredPool("medio"));
-  if(!lockedCards.ACCION) currentChallenge.accion=pick(filteredPool("accion"));
-  if(!lockedCards.RESTRICCION) currentChallenge.restriccion=pick(filteredPool("restriccion"));
-  if(!lockedCards.CONTEXTO) currentChallenge.contexto=pick(filteredPool("contexto"));
-  if(!lockedCards.DESAFIO) currentChallenge.desafio=pick(filteredPool("desafio"));
-  renderChallengeBoard();
-  playSound("click");
-}
+        async function initializeAudio() {
+            if (audioReady) return;
+            try {
+                await Tone.start();
+                clickSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 } }).toDestination();
+                startSynth = new Tone.FMSynth({ harmonicity: 2, modulationIndex: 5, envelope: { attack: 0.1, decay: 0.4, sustain: 0.1, release: 0.6 } }).toDestination();
+                aiSynth = new Tone.AMSynth({ harmonicity: 1.5, envelope: { attack: 0.02, decay: 0.4, sustain: 0.1, release: 0.4 } }).toDestination();
+                successSynth = new Tone.PolySynth(Tone.Synth, { envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+                audioReady = true;
+            } catch (e) {
+                console.warn("Audio Context could not start:", e);
+            }
+        }
 
-function reroll(dimension){
-  const map={CONCEPTO:"concepto",MEDIO:"medio",ACCION:"accion",RESTRICCION:"restriccion",CONTEXTO:"contexto",DESAFIO:"desafio"};
-  const key=map[dimension];
-  if(key) currentChallenge[key]=pick(filteredPool(key));
-  currentChallenge.id=makeId();
-  renderChallengeBoard();
-  showToast(dimension+" actualizado","🎲");
-}
-function toggleLock(dimension){
-  lockedCards[dimension]=!lockedCards[dimension];
-  renderChallengeBoard();
-  showToast(lockedCards[dimension]?dimension+" bloqueado":dimension+" liberado",lockedCards[dimension]?"🔒":"🔓");
-}
+        function playSound(type) {
+            if (!soundEnabled || !audioReady) return;
+            try {
+                if (type === 'click' && clickSynth) clickSynth.triggerAttackRelease('C5', '16n');
+                if (type === 'start' && startSynth) startSynth.triggerAttackRelease('D3', '2n');
+                if (type === 'ai' && aiSynth) aiSynth.triggerAttackRelease('A3', '4n');
+                if (type === 'success' && successSynth) successSynth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n');
+            } catch(e) {
+                // Ignore audio trigger errors gracefully
+            }
+        }
 
-function renderChallengeBoard(){
-  challengeContainer.innerHTML="";
-  const dims=[
-    ["CATEGORIA",currentChallenge.categoryName],
-    ["CONCEPTO",currentChallenge.concepto],
-    ["MEDIO",currentChallenge.medio],
-    ["ACCION",currentChallenge.accion],
-    ["RESTRICCION",currentChallenge.restriccion],
-    ["CONTEXTO",currentChallenge.contexto],
-    ["DESAFIO",currentChallenge.desafio]
-  ];
-  challengeContainer.className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3";
-  dims.forEach(([key,val],idx)=>{
-    const s=CARD_STYLES[key];
-    const card=document.createElement("article");
-    card.className=`glass-panel rounded-2xl p-3.5 flex flex-col justify-between min-h-52 border ${s.border} relative overflow-hidden animate-card-in`;
-    card.style.animationDelay=`${idx*45}ms`;
-    if(key==="CATEGORIA"){
-      card.innerHTML=`<div><div class="flex items-center gap-2"><span>${s.emoji}</span><span class="font-display font-bold text-[10px] uppercase tracking-wider ${s.text}">CATEGORÍA</span></div><div class="mt-5"><p class="text-sm font-bold text-white leading-snug">${val}</p><p class="text-[11px] text-slate-500 mt-2">${getCategory(currentChallenge.category)[2]}</p></div></div><div class="pt-2 border-t border-white/5 text-[10px] text-slate-500 font-mono">CAMPO ${currentChallenge.category}</div>`;
-    } else {
-      const locked=lockedCards[key];
-      card.innerHTML=`<div class="flex items-center justify-between gap-1"><div class="flex items-center gap-1.5"><span>${s.emoji}</span><span class="font-display font-bold text-[10px] uppercase tracking-wider ${s.text}">${key}</span></div><div class="flex gap-1"><button class="lock p-1 rounded-md text-xs ${locked?"text-amber-300 bg-amber-950/50":"text-slate-500 hover:text-white"}">${locked?"🔒":"🔓"}</button><button class="reroll p-1 rounded-md text-xs text-slate-400 hover:text-white hover:bg-slate-800">🎲</button></div></div><div class="my-auto py-3"><p class="text-sm font-semibold text-slate-100 leading-snug">${val}</p></div><div class="pt-2 border-t border-white/5 flex justify-between text-[10px] text-slate-500"><span>EJE ${idx}/6</span><span>${locked?"FIJADO":"ALEATORIO"}</span></div>`;
-      card.querySelector(".lock").onclick=()=>toggleLock(key);
-      card.querySelector(".reroll").onclick=()=>reroll(key);
-    }
-    challengeContainer.appendChild(card);
-  });
-  challengeSummary.classList.remove("hidden");
-  challengeSummaryText.innerHTML=`En <strong class="text-violet-300">${currentChallenge.categoryName}</strong>, explora <strong class="text-cyan-300">${currentChallenge.concepto}</strong> mediante <strong class="text-sky-300">${currentChallenge.medio}</strong>: <strong class="text-amber-300">${currentChallenge.accion}</strong>. <span class="text-rose-300">Restricción:</span> ${currentChallenge.restriccion}. <span class="text-emerald-300">Contexto:</span> ${currentChallenge.contexto}. <span class="text-fuchsia-300">Desafío:</span> ${currentChallenge.desafio}.`;
-  solutionDisplay.classList.add("hidden");
-  solutionChoices.classList.remove("hidden");
-  currentSolution="";
-}
+        // Sound Toggle
+        const soundToggleBtn = document.getElementById('sound-toggle-btn');
+        const soundIcon = document.getElementById('sound-icon');
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+            showToast(soundEnabled ? 'Sonidos activados' : 'Sonidos silenciados');
+        });
 
-function buildLocalSolution(){
-  return `
-    <div class="space-y-4">
-      <p class="text-base text-slate-200">Diseña un primer prototipo para <strong class="text-white">${currentChallenge.contexto}</strong> que combine <strong class="text-cyan-300">${currentChallenge.concepto}</strong> con <strong class="text-sky-300">${currentChallenge.medio}</strong>.</p>
-      <div class="grid sm:grid-cols-3 gap-3">
-        <div class="p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/20"><b class="text-cyan-300 text-xs">01 · IDEA</b><p class="text-xs text-slate-300 mt-1">Define qué experiencia debe vivir una persona y qué cambia después de participar.</p></div>
-        <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-500/20"><b class="text-amber-300 text-xs">02 · PROTOTIPO</b><p class="text-xs text-slate-300 mt-1">Construye una versión mínima usando la acción: ${currentChallenge.accion}.</p></div>
-        <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20"><b class="text-emerald-300 text-xs">03 · PRUEBA</b><p class="text-xs text-slate-300 mt-1">Pruébalo con pocas personas y observa si resuelve el desafío: ${currentChallenge.desafio}.</p></div>
-      </div>
-      <div class="p-3.5 rounded-xl border border-rose-500/20 bg-rose-950/20"><b class="text-rose-300 text-xs">RESTRICCIÓN DEL RETO</b><p class="text-sm text-slate-300 mt-1">${currentChallenge.restriccion}</p></div>
-    </div>`;
-}
+        // 3. TOAST NOTIFICATION UTILITY
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+        let toastTimeout;
 
-function showLocalSolution(){
-  currentSolution=buildLocalSolution();
-  solutionTitle.textContent="⚡ Propuesta Núcleo";
-  solutionBadge.textContent="100% LOCAL · 0 IA · 0 TOKENS";
-  solutionBadge.className="text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
-  solutionContent.innerHTML=currentSolution;
-  solutionChoices.classList.add("hidden");
-  solutionDisplay.classList.remove("hidden");
-  playSound("success");
-}
+        function showToast(msg, icon = '✨') {
+            toastMessage.textContent = msg;
+            toastIcon.textContent = icon;
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2400);
+        }
 
-function showMethod(){
-  methodModal.classList.remove("hidden");
-}
+        // 4. ENGINE MODES (Local 0-Tokens vs Gemini Flash Lite)
+        let activeEngineMode = 'offline'; // default: safe, 0 tokens
+        const engineOfflineBtn = document.getElementById('engine-offline-btn');
+        const engineAiBtn = document.getElementById('engine-ai-btn');
+        const currentEnginePill = document.getElementById('current-engine-pill');
 
-function getSaved(){try{return JSON.parse(localStorage.getItem("nucleo_saved_challenges")||"[]")}catch{return[]}}
-function setSaved(v){localStorage.setItem("nucleo_saved_challenges",JSON.stringify(v));updateSavedCounters();}
-function updateSavedCounters(){const n=getSaved().length;savedBadgeCount.textContent=n;modalSavedCount.textContent=n;}
+        function setEngineMode(mode) {
+            activeEngineMode = mode;
+            if (mode === 'offline') {
+                engineOfflineBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all bg-cyan-500 text-slate-950 font-bold shadow-sm';
+                engineAiBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white';
+                currentEnginePill.textContent = 'Modo: ⚡ Motor Núcleo (0 Tokens)';
+                currentEnginePill.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30';
+                showToast('Modo Núcleo activo (0 tokens / 0 cobros)', '🛡️');
+            } else {
+                engineAiBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all bg-fuchsia-500 text-slate-950 font-bold shadow-sm';
+                engineOfflineBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white';
+                currentEnginePill.textContent = 'Modo: 🧠 Gemini Flash Lite';
+                currentEnginePill.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-500/30';
+                showToast('Modo Gemini Flash Lite activo (Tope 250t)', '🧠');
+            }
+        }
 
-function saveCurrent(){
-  const items=getSaved();
-  const key=JSON.stringify([currentChallenge.category,currentChallenge.concepto,currentChallenge.medio,currentChallenge.accion,currentChallenge.restriccion,currentChallenge.contexto,currentChallenge.desafio]);
-  if(items.some(x=>x.signature===key)){showToast("Este reto ya está guardado","ℹ️");return;}
-  items.unshift({...currentChallenge,solution:currentSolution||buildLocalSolution(),signature:key,timestamp:Date.now()});
-  setSaved(items);saveBtnText.textContent="¡Guardado!";showToast("Reto guardado","⭐");
-  setTimeout(()=>saveBtnText.textContent="Guardar Reto",1500);
-}
+        engineOfflineBtn.addEventListener('click', () => setEngineMode('offline'));
+        engineAiBtn.addEventListener('click', () => setEngineMode('ai'));
 
-function renderSaved(filter=""){
-  const q=filter.toLowerCase();
-  const items=getSaved().filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
-  savedList.innerHTML=items.length?items.map((x,i)=>`
-    <div class="glass-panel p-3.5 rounded-xl border border-white/5 flex flex-col gap-2">
-      <div class="text-[10px] font-mono text-violet-300">${x.id} · ${x.categoryName}</div>
-      <div class="text-sm font-semibold text-white">${x.concepto} · ${x.medio}</div>
-      <div class="text-xs text-slate-400">${x.accion} · ${x.contexto}</div>
-      <div class="flex gap-2 justify-end"><button data-i="${i}" class="load px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-200 text-xs">Cargar</button><button data-i="${i}" class="del px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 text-xs">Eliminar</button></div>
-    </div>`).join(""):`<div class="text-center py-10 text-xs text-slate-500">No hay retos guardados.</div>`;
-  savedList.querySelectorAll(".load").forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];currentChallenge={...x};currentCategory=x.category;updateCategoryUI();renderChallengeBoard();savedModal.classList.add("hidden");});
-  savedList.querySelectorAll(".del").forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];setSaved(getSaved().filter(y=>y.signature!==x.signature));renderSaved(filter);});
-}
+        // 5. APPLICATION STATE
+        let currentChallenge = {
+            id: null,
+            concepto: '',
+            accion: '',
+            desafio: '',
+            contexto: '',
+            date: ''
+        };
+        let currentSolution = '';
+        let currentAiSolution = '';
+        let lockedCards = { CONCEPTO: false, ACCIÓN: false, DESAFÍO: false, CONTEXTO: false };
 
-function injectWorksheetFields(){
-  const grid=document.querySelector("#print-worksheet .grid.grid-cols-2");
-  if(!grid||grid.dataset.expanded)return;
-  grid.dataset.expanded="1";
-  const extras=[["MEDIO","ws-medio"],["RESTRICCIÓN","ws-restriccion"],["DESAFÍO","ws-desafio"]];
-  extras.forEach(([label,id])=>{const d=document.createElement("div");d.className="p-3 rounded-lg border border-slate-600 bg-slate-800/40";d.innerHTML=`<span class="text-[10px] uppercase font-bold text-slate-300">${label}</span><div id="${id}" class="text-sm font-semibold text-white mt-1"></div>`;grid.appendChild(d);});
-}
+        // 6. DOM ELEMENTS
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startButton = document.getElementById('start-button');
+        const quickMethodBtn = document.getElementById('quick-method-btn');
+        const challengeContainer = document.getElementById('challenge-container');
+        const challengeSummary = document.getElementById('challenge-summary');
+        const challengeSummaryText = document.getElementById('challenge-summary-text');
+        const copySummaryBtn = document.getElementById('copy-summary-btn');
+        const copySummaryLabel = document.getElementById('copy-summary-label');
+        const rerollAllBtn = document.getElementById('reroll-all-btn');
+        
+        const solutionChoices = document.getElementById('solution-choices');
+        const nucleoSolutionBtn = document.getElementById('nucleo-solution-btn');
+        const aiSolutionBtn = document.getElementById('ai-solution-btn');
+        const aiBtnText = document.getElementById('ai-btn-text');
+        const aiBtnSpinner = document.getElementById('ai-btn-spinner');
+        const standardSolutionBtn = document.getElementById('standard-solution-btn');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        const solutionDisplay = document.getElementById('solution-display');
+        const solutionTitle = document.getElementById('solution-title');
+        const solutionBadge = document.getElementById('solution-badge');
+        const solutionContent = document.getElementById('solution-content');
+        const solutionFallbackNotice = document.getElementById('solution-fallback-notice');
 
-function openExport(){
-  injectWorksheetFields();
-  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  set("ws-date",currentChallenge.date);set("ws-id",currentChallenge.id);set("ws-concepto",currentChallenge.concepto);set("ws-accion",currentChallenge.accion);set("ws-desafio",currentChallenge.desafio);set("ws-contexto",currentChallenge.contexto);set("ws-medio",currentChallenge.medio);set("ws-restriccion",currentChallenge.restriccion);
-  set("ws-sintesis",challengeSummaryText.innerText);document.getElementById("ws-solucion").innerHTML=currentSolution||buildLocalSolution();
-  exportModal.classList.remove("hidden");
-}
+        // Smooth fade-in/fade-out helper for solution transitions
+        function setSolutionContentSmoothly(newHtml, append = false) {
+            if (!solutionContent) return;
+            
+            // If already empty or display is just appearing, set directly and fade in
+            if (!solutionContent.innerHTML.trim() || solutionDisplay.classList.contains('hidden')) {
+                if (append) {
+                    solutionContent.innerHTML += newHtml;
+                } else {
+                    solutionContent.innerHTML = newHtml;
+                }
+                solutionContent.classList.remove('content-fade-out');
+                solutionContent.classList.add('content-fade-in');
+                return;
+            }
 
-function showToast(msg,icon="✨"){
-  const t=document.getElementById("toast"),m=document.getElementById("toast-message"),i=document.getElementById("toast-icon");
-  m.textContent=msg;i.textContent=icon;t.classList.remove("translate-y-12","opacity-0");t.classList.add("translate-y-0","opacity-100");
-  clearTimeout(window.__toast);window.__toast=setTimeout(()=>{t.classList.add("translate-y-12","opacity-0");t.classList.remove("translate-y-0","opacity-100")},2200);
-}
+            // Smooth fade out first, then inject and fade in
+            solutionContent.classList.remove('content-fade-in');
+            solutionContent.classList.add('content-fade-out');
 
-async function initAudio(){
-  if(audioReady||typeof Tone==="undefined")return;
-  try{await Tone.start();clickSynth=new Tone.Synth({oscillator:{type:"triangle"},envelope:{attack:.005,decay:.1,sustain:.05,release:.1}}).toDestination();startSynth=new Tone.FMSynth({harmonicity:2,modulationIndex:5}).toDestination();successSynth=new Tone.PolySynth(Tone.Synth).toDestination();audioReady=true}catch{}
-}
-function playSound(type){if(!soundEnabled||!audioReady)return;try{if(type==="click")clickSynth?.triggerAttackRelease("C5","16n");if(type==="start")startSynth?.triggerAttackRelease("D3","8n");if(type==="success")successSynth?.triggerAttackRelease(["C4","E4","G4"],"8n")}catch{}}
+            setTimeout(() => {
+                if (append) {
+                    solutionContent.innerHTML += newHtml;
+                } else {
+                    solutionContent.innerHTML = newHtml;
+                }
+                // Force reflow for reliable transition
+                void solutionContent.offsetWidth;
+                solutionContent.classList.remove('content-fade-out');
+                solutionContent.classList.add('content-fade-in');
+            }, 180);
+        }
+        
+        const saveChallengeBtn = document.getElementById('save-challenge-btn');
+        const saveBtnText = document.getElementById('save-btn-text');
+        const exportSheetBtn = document.getElementById('export-sheet-btn');
+        const expandIdeaBtn = document.getElementById('expand-idea-btn');
+        const expandBtnText = document.getElementById('expand-btn-text');
+        const expandBtnSpinner = document.getElementById('expand-btn-spinner');
+        const reimaginarRetoBtn = document.getElementById('reimaginar-reto-btn');
+        const reimagineBtnText = document.getElementById('reimagine-btn-text');
+        const reimagineBtnSpinner = document.getElementById('reimagine-btn-spinner');
+        const copySolutionBtn = document.getElementById('copy-solution-btn');
+        const copySolutionText = document.getElementById('copy-solution-text');
 
-function removeAIFunctionality(){
-  ["engine-ai-btn","ai-solution-btn","expand-idea-btn","reimaginar-reto-btn","loading-indicator","solution-fallback-notice"].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
-  const engine=document.getElementById("engine-offline-btn"); if(engine){engine.textContent="⚡ MOTOR NÚCLEO · LOCAL";engine.disabled=true;engine.className="px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-500 text-slate-950";}
-  const pill=document.getElementById("current-engine-pill");if(pill)pill.textContent="⚡ MOTOR LOCAL · SIN IA";
-  const standard=document.getElementById("standard-solution-btn");if(standard){standard.textContent="📋 Plan de implementación";standard.onclick=showLocalSolution;}
-  const footer=document.querySelector("footer");if(footer)footer.innerHTML=footer.innerHTML.replace(/Motor Local Ready/g,"Motor local · Sin IA");
-}
+        // Navigation buttons & Modals
+        const navDeckBtn = document.getElementById('nav-deck-btn');
+        const navSavedBtn = document.getElementById('nav-saved-btn');
+        const navMethodBtn = document.getElementById('nav-method-btn');
+        const footerMethodLink = document.getElementById('footer-method-link');
+        const savedBadgeCount = document.getElementById('saved-badge-count');
+        const modalSavedCount = document.getElementById('modal-saved-count');
+        const themeBtnThumb = document.getElementById('theme-btn-thumb');
+        
+        const savedModal = document.getElementById('saved-challenges-modal');
+        const closeSavedModalBtn = document.getElementById('close-saved-modal-btn');
+        const savedList = document.getElementById('saved-list');
+        const savedSearchInput = document.getElementById('saved-search-input');
+        const clearAllSavedBtn = document.getElementById('clear-all-saved-btn');
+        
+        const methodModal = document.getElementById('method-modal');
+        const closeMethodModalBtn = document.getElementById('close-method-modal-btn');
+        
+        const exportModal = document.getElementById('export-modal');
+        const closeExportModalBtn = document.getElementById('close-export-modal-btn');
+        const printNowBtn = document.getElementById('print-now-btn');
 
-injectCategoryUI();
-removeAIFunctionality();
-updateSavedCounters();
-updateCategoryUI();
+        // Artwork Lightbox Modal (Full-res view)
 
-startButton.onclick=async()=>{await initAudio();startScreen.classList.add("hidden");gameScreen.classList.remove("hidden");generateFullChallenge();playSound("start");};
-navDeckBtn.onclick=()=>{if(gameScreen.classList.contains("hidden"))startButton.click();};
-rerollAllBtn.onclick=generateFullChallenge;
-saveChallengeBtn.onclick=saveCurrent;
-exportSheetBtn.onclick=openExport;
-copySummaryBtn.onclick=async()=>{await navigator.clipboard?.writeText(challengeSummaryText.innerText);copySummaryLabel.textContent="¡Copiado!";showToast("Reto copiado","📋");setTimeout(()=>copySummaryLabel.textContent="Copiar",1400)};
-copySolutionBtn.onclick=async()=>{const d=document.createElement("div");d.innerHTML=solutionContent.innerHTML;await navigator.clipboard?.writeText(d.innerText);copySolutionText.textContent="¡Copiado!";setTimeout(()=>copySolutionText.textContent="Copiar texto",1400)};
-document.getElementById("nucleo-solution-btn").onclick=showLocalSolution;
-quickMethodBtn.onclick=showMethod;navMethodBtn.onclick=showMethod;footerMethodLink.onclick=showMethod;
-navSavedBtn.onclick=()=>{renderSaved();savedModal.classList.remove("hidden")};
-savedSearchInput.oninput=e=>renderSaved(e.target.value);
-document.getElementById("clear-all-saved-btn").onclick=()=>{if(confirm("¿Eliminar todos los retos guardados?")){setSaved([]);renderSaved()}};
-document.getElementById("close-saved-modal-btn").onclick=()=>savedModal.classList.add("hidden");
-document.getElementById("close-method-modal-btn").onclick=()=>methodModal.classList.add("hidden");
-document.getElementById("close-export-modal-btn").onclick=()=>exportModal.classList.add("hidden");
-document.getElementById("print-now-btn").onclick=()=>window.print();
-soundToggleBtn.onclick=()=>{soundEnabled=!soundEnabled;soundIcon.textContent=soundEnabled?"🔊":"🔇";showToast(soundEnabled?"Sonidos activados":"Sonidos silenciados")};
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){savedModal.classList.add("hidden");methodModal.classList.add("hidden");exportModal.classList.add("hidden")}if(e.code==="Space"&&!gameScreen.classList.contains("hidden")&&e.target.tagName!=="INPUT"&&e.target.tagName!=="SELECT"){e.preventDefault();generateFullChallenge()}});
-[savedModal,methodModal,exportModal].forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.add("hidden")}));
-\n    </script>
+        const artworkLightboxModal = document.getElementById('artwork-lightbox-modal');
+        const closeLightboxBtn = document.getElementById('close-lightbox-btn');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxDimBadge = document.getElementById('lightbox-dim-badge');
+        const lightboxFileBadge = document.getElementById('lightbox-file-badge');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxDesc = document.getElementById('lightbox-desc');
+        const lightboxSetBgBtn = document.getElementById('lightbox-set-bg-btn');
+        const lightboxDownloadLink = document.getElementById('lightbox-download-link');
+        let activeLightboxArtwork = null;
+
+        // Solution Dossier Art Elements
+        const solutionArtBanner = document.getElementById('solution-art-banner');
+        const solutionArtHero = document.getElementById('solution-art-hero');
+        const solutionArtName = document.getElementById('solution-art-name');
+        const solutionArtStrip = document.getElementById('solution-art-strip');
+
+        // Worksheet Elements
+        const wsDate = document.getElementById('ws-date');
+        const wsId = document.getElementById('ws-id');
+        const wsConcepto = document.getElementById('ws-concepto');
+        const wsAccion = document.getElementById('ws-accion');
+        const wsDesafio = document.getElementById('ws-desafio');
+        const wsContexto = document.getElementById('ws-contexto');
+        const wsArtConcepto = document.getElementById('ws-art-concepto');
+        const wsArtAccion = document.getElementById('ws-art-accion');
+        const wsArtDesafio = document.getElementById('ws-art-desafio');
+        const wsArtContexto = document.getElementById('ws-art-contexto');
+        const wsSintesis = document.getElementById('ws-sintesis');
+        const wsSolucion = document.getElementById('ws-solucion');
+
+        // Year update
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // 7. LOCAL STORAGE FOR SAVED CHALLENGES
+        function getSavedChallenges() {
+            try {
+                return JSON.parse(localStorage.getItem('nucleo_saved_challenges') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveChallenges(items) {
+            localStorage.setItem('nucleo_saved_challenges', JSON.stringify(items));
+            updateSavedCounters();
+        }
+
+        function updateSavedCounters() {
+            const items = getSavedChallenges();
+            savedBadgeCount.textContent = items.length;
+            modalSavedCount.textContent = items.length;
+        }
+
+        // 8. HEURISTIC NÚCLEO ENGINE (0 TOKENS / OFFLINE)
+        const estrategiasPorDesafio = {
+            "Falta de Recursos Económicos": "diseño de bajo costo, reaprovechamiento de materiales de desecho y economías del trueque colaborativo",
+            "Desinterés Comunitario": "microintervenciones lúdicas en el espacio cotidiano y dinámicas de escucha activa puerta a puerta",
+            "Barreras Tecnológicas": "interfaces analógico-digitales híbridas (tarjetas impresas, audio simple o dinámicas sin pantallas)",
+            "Competencia con Grandes Corporaciones": "revalorización del relato artesanal, identidad de proximidad y soberanía de los creadores",
+            "Regulaciones Gubernamentales Estrictas": "activaciones tácticas temporales, metodologías de urbanismo táctico y redes autogestionadas",
+            "Impacto Ambiental Negativo": "diseño circular, biomateriales locales y visualización de huella ecológica con arte pedagógico",
+            "Gentrificación Cultural": "preservación viva de saberes barriales, cartografías afectivas y espacios de encuentro vecinal",
+            "Brecha Generacional": "emparejamiento de parejas creativas (jóvenes digitales + sabios tradicionales) en mentorías cruzadas",
+            "Desinformación y Noticias Falsas": "laboratorios de verificación comunitaria a través de fanzines, muralismo y podcasts colectivos",
+            "Apatía Política": "asambleas creativas gamificadas que traducen acuerdos ciudadanos en manifiestos artísticos tangibles",
+            "Saturación del Mercado": "diferenciación a través de piezas de edición limitada con trazabilidad poética y experiencias inmersivas",
+            "Vandalismo y Falta de Cuidado": "co-creación del espacio con la juventud local para generar sentido de autoría y custodia colectiva"
+        };
+
+        const accionTransformada = {
+            "Organizar Talleres Comunitarios": "un laboratorio participativo de co-creación intensiva",
+            "Desarrollar una Plataforma Digital": "un repositorio accesible y cooperativo de saberes abiertos",
+            "Crear una Instalación de Arte Público": "una pieza interactiva de sitio específico",
+            "Lanzar una Campaña de Concienciación": "una narrativa transmedia que combine carteles de guerrilla y relatos orales",
+            "Diseñar un Programa de Voluntariado": "una red de brigadas culturales itinerantes",
+            "Producir un Documental Interactivo": "un mosaico testimonial que invite a la audiencia a intervenir la historia",
+            "Crear un Laboratorio Ciudadano": "una estación comunitaria de prototipado rápido y experimentación",
+            "Establecer una Red de Trueque": "un sistema circular de intercambio de habilidades, herramientas y afectos",
+            "Lanzar un Podcast Colaborativo": "una serie de cápsulas sonoras grabadas directamente con los habitantes",
+            "Diseñar una Experiencia de Realidad Aumentada": "capas poéticas interactivas superpuestas al territorio físico",
+            "Publicar un Fanzine Colectivo": "una publicación editorial experimental de edición popular y libre distribución",
+            "Mapear Activos Comunitarios": "una cartografía viva que visibilice las fortalezas ocultas del territorio"
+        };
+
+        function generateNucleoSolution(c) {
+            const tacticaDesafio = estrategiasPorDesafio[c.desafio] || "dinámicas participativas de innovación social abierta";
+            const accionAdaptada = accionTransformada[c.accion] || c.accion;
+
+            return `
+                <div class="space-y-3">
+                    <p class="text-base text-slate-200">
+                        Para intervenir en <strong class="text-white">${c.contexto}</strong> frente a la problemática de <strong class="text-rose-300">${c.desafio}</strong>, la propuesta central consiste en activar <strong>${accionAdaptada}</strong> vertebrada por el enfoque de <em class="text-cyan-300">${c.concepto}</em>.
+                    </p>
+                    <div class="p-3.5 bg-cyan-950/40 border-l-2 border-cyan-400 rounded-r-lg text-sm text-slate-300">
+                        <strong class="text-cyan-300">Mecanismo de Transformación:</strong> Se sortea la barrera mediante <strong>${tacticaDesafio}</strong>, integrando el arte y la mediación comunitaria para que los mismos participantes se apropien del proceso como autores y custodios.
+                    </div>
+                </div>
+            `;
+        }
+
+        function expandNucleoIdea(c) {
+            return `
+                <div class="space-y-4 text-sm text-slate-200">
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-cyan-500/20">
+                        <h4 class="font-bold text-cyan-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
+                            👥 1. Colaboradores Estratégicos
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+                            <li>Líderes barriales, comerciantes o artesanos activos en <strong>${c.contexto}</strong>.</li>
+                            <li>Colectivos juveniles de programación creativa, diseño o activismo cultural.</li>
+                            <li>Espacios educativos locales (escuelas o bibliotecas) como nodos de encuentro y legitimación.</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-fuchsia-500/20">
+                        <h4 class="font-bold text-fuchsia-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
+                            📦 2. Recursos Clave (Bajo Costo)
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+                            <li>Espacio común cedido temporalmente en el territorio.</li>
+                            <li>Kits de prototipado ágil: materiales reciclados, herramientas abiertas y software libre.</li>
+                            <li>Metodología de mediación de Núcleo Colectivo (dinámicas de escucha, mapeo y co-diseño).</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-emerald-500/20">
+                        <h4 class="font-bold text-emerald-300 flex items-center gap-1.5 mb-1 text-xs uppercase tracking-wide">
+                            🎯 3. Métricas de Impacto
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+                            <li><strong>Superación del Desafío:</strong> Participación directa de personas afectadas por <em>${c.desafio}</em>.</li>
+                            <li><strong>Apropiación Social:</strong> Continuidad de iniciativas derivadas de forma autónoma.</li>
+                            <li><strong>Vínculo Comunitario:</strong> Grado de cohesión y confianza intergeneracional medido al cierre.</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        const retosReimaginadosLocales = [
+            { concepto: "Biomateriales y Soberanía Local", accion: "Construir un Laboratorio Móvil de Fabricación", desafio: "Dependencia de Cadenas Globales de Suministro", contexto: "una Red de Huertos Urbanos Vecinales" },
+            { concepto: "Paisajes Sonoros Intergeneracionales", accion: "Diseñar una Instalación de Arte Público", desafio: "Brecha Generacional y Pérdida de Oralidad", contexto: "una Plaza Pública Histórica" },
+            { concepto: "Soberanía de Datos Comunitarios", accion: "Desarrollar una Plataforma Digital", desafio: "Extractivismo Digital y Falta de Privacidad", contexto: "un Colectivo de Vendedoras Ambulantes" },
+            { concepto: "Diseño Biofílico y Cuidado Radical", accion: "Crear un Laboratorio Ciudadano", desafio: "Estrés Urbano y Falta de Áreas Verdes", contexto: "un Centro de Salud Comunitario" },
+            { concepto: "Economía Circular Textil y Memoria", accion: "Establecer una Red de Trueque", desafio: "Sobreproducción y Descarte Masivo de Prendas", contexto: "un Barrio de Tradición Confeccionista" }
+        ];
+
+        // 9. API CALL CLIENT (CALLS /api/gemini/generate SAFELY)
+        async function callGeminiAPI(prompt, jsonSchema = null, maxTokens = 250) {
+            try {
+                const response = await fetch('/api/gemini/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, jsonSchema, maxTokens })
+                });
+                if (!response.ok) { 
+                    const errData = await response.json().catch(() => ({}));
+                    console.warn("API returned non-ok status:", errData);
+                    return null;
+                }
+                const data = await response.json();
+                return data && data.text ? data : null;
+            } catch (error) {
+                console.warn("Error de conexión al llamar a la API:", error);
+                return null;
+            }
+        }
+
+        // 10. CARD GENERATION & INTERACTION
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function generateFullChallenge() {
+            const lockedCount = Object.values(lockedCards).filter(Boolean).length;
+            if (lockedCount === 4) {
+                showToast("Las 4 dimensiones están fijadas. Desbloquea alguna para girar.", "🔒");
+                return;
+            }
+            playSound('click');
+            
+            if (!lockedCards.CONCEPTO) currentChallenge.concepto = getRandomItem(conceptos);
+            if (!lockedCards.ACCIÓN) currentChallenge.accion = getRandomItem(acciones);
+            if (!lockedCards.DESAFÍO) currentChallenge.desafio = getRandomItem(desafios);
+            if (!lockedCards.CONTEXTO) currentChallenge.contexto = getRandomItem(contextos);
+            
+            currentChallenge.id = 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            currentChallenge.date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            renderChallengeBoard();
+        }
+
+        function rerollSingleDimension(dimension) {
+            playSound('click');
+            if (dimension === 'CONCEPTO') currentChallenge.concepto = getRandomItem(conceptos);
+            if (dimension === 'ACCIÓN') currentChallenge.accion = getRandomItem(acciones);
+            if (dimension === 'DESAFÍO') currentChallenge.desafio = getRandomItem(desafios);
+            if (dimension === 'CONTEXTO') currentChallenge.contexto = getRandomItem(contextos);
+            
+            renderChallengeBoard();
+            showToast(`${dimension} actualizado`, '🎲');
+        }
+
+        function toggleLockDimension(dimension) {
+            lockedCards[dimension] = !lockedCards[dimension];
+            renderChallengeBoard();
+            showToast(lockedCards[dimension] ? `${dimension} bloqueado` : `${dimension} liberado`, lockedCards[dimension] ? '🔒' : '🔓');
+        }
+
+        function unlockAllDimensions() {
+            playSound('click');
+            lockedCards = { CONCEPTO: false, ACCIÓN: false, DESAFÍO: false, CONTEXTO: false };
+            renderChallengeBoard();
+            showToast("Todas las dimensiones han sido liberadas", "🔓");
+        }
+
+        function updateLockProgressUI() {
+            const lockedCount = Object.values(lockedCards).filter(Boolean).length;
+            const badge = document.getElementById('locked-count-badge');
+            const desc = document.getElementById('locked-state-description');
+            const pct = document.getElementById('locked-percentage');
+            const unlockAllBtn = document.getElementById('unlock-all-btn');
+            const progressBar = document.getElementById('locked-progress-bar');
+
+            if (badge) {
+                badge.textContent = `${lockedCount} / 4`;
+                if (lockedCount === 4) {
+                    badge.className = 'font-mono text-xs font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/50';
+                } else if (lockedCount > 0) {
+                    badge.className = 'font-mono text-xs font-bold px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/40';
+                } else {
+                    badge.className = 'font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10';
+                }
+            }
+
+            if (progressBar) {
+                progressBar.setAttribute('aria-valuenow', lockedCount);
+            }
+
+            if (pct) {
+                pct.textContent = `${lockedCount * 25}%`;
+            }
+
+            if (desc) {
+                if (lockedCount === 0) {
+                    desc.textContent = '— Todas las cartas girarán al azar';
+                } else if (lockedCount === 4) {
+                    desc.textContent = '— Reto completo y 100% fijado';
+                } else {
+                    const freeCount = 4 - lockedCount;
+                    desc.textContent = `— ${lockedCount} fijada${lockedCount > 1 ? 's' : ''}, ${freeCount} girará${freeCount > 1 ? 'n' : ''}`;
+                }
+            }
+
+            if (unlockAllBtn) {
+                if (lockedCount > 0) {
+                    unlockAllBtn.classList.remove('hidden');
+                } else {
+                    unlockAllBtn.classList.add('hidden');
+                }
+            }
+
+            // Update the 4 segment bars and 4 quick-toggle chips
+            const segmentStyles = {
+                CONCEPTO: { 
+                    bg: 'bg-cyan-400 shadow-sm shadow-cyan-400/50', 
+                    chipActive: 'bg-cyan-950/70 border-cyan-500/60 text-cyan-300 font-semibold shadow-sm shadow-cyan-500/20' 
+                },
+                ACCIÓN: { 
+                    bg: 'bg-amber-400 shadow-sm shadow-amber-400/50', 
+                    chipActive: 'bg-amber-950/70 border-amber-500/60 text-amber-300 font-semibold shadow-sm shadow-amber-500/20' 
+                },
+                DESAFÍO: { 
+                    bg: 'bg-rose-500 shadow-sm shadow-rose-500/50', 
+                    chipActive: 'bg-rose-950/70 border-rose-500/60 text-rose-300 font-semibold shadow-sm shadow-rose-500/20' 
+                },
+                CONTEXTO: { 
+                    bg: 'bg-emerald-400 shadow-sm shadow-emerald-400/50', 
+                    chipActive: 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 font-semibold shadow-sm shadow-emerald-500/20' 
+                }
+            };
+
+            ['CONCEPTO', 'ACCIÓN', 'DESAFÍO', 'CONTEXTO'].forEach(dim => {
+                const seg = document.getElementById(`prog-seg-${dim}`);
+                const isLocked = !!lockedCards[dim];
+                if (seg) {
+                    if (isLocked) {
+                        seg.className = `h-full flex-1 rounded-full transition-all duration-300 ${segmentStyles[dim].bg}`;
+                    } else {
+                        seg.className = 'h-full flex-1 rounded-full bg-slate-800/80 transition-all duration-300';
+                    }
+                }
+
+                const chip = document.querySelector(`.dim-lock-chip[data-dim="${dim}"]`);
+                if (chip) {
+                    const icon = chip.querySelector('.chip-lock-icon');
+                    if (isLocked) {
+                        chip.className = `dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs group ${segmentStyles[dim].chipActive}`;
+                        if (icon) {
+                            icon.textContent = '🔒';
+                            icon.className = 'chip-lock-icon text-xs text-amber-400 opacity-100 font-bold shrink-0 pr-1';
+                        }
+                    } else {
+                        chip.className = 'dim-lock-chip text-left p-1.5 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs bg-slate-900/60 border-white/10 text-slate-300 hover:border-white/30 hover:bg-slate-800/80 group';
+                        if (icon) {
+                            icon.textContent = '🔓';
+                            icon.className = 'chip-lock-icon text-xs opacity-50 shrink-0 pr-1';
+                        }
+                    }
+                }
+            });
+        }
+
+        // 10.1 DYNAMIC ARTWORK ON BUTTONS & CHIPS (SYNCS WITH ACTIVE VARIABLES)
+        function updateDynamicButtonsArtwork() {
+            // 1. Update the 4 Quick Dimension Chips with active variable artwork thumbnails and text
+            const dims = [
+                { key: 'CONCEPTO', val: currentChallenge.concepto },
+                { key: 'ACCIÓN', val: currentChallenge.accion },
+                { key: 'DESAFÍO', val: currentChallenge.desafio },
+                { key: 'CONTEXTO', val: currentChallenge.contexto }
+            ];
+
+            dims.forEach(d => {
+                const chip = document.querySelector(`.dim-lock-chip[data-dim="${d.key}"]`);
+                if (chip) {
+                    const art = getArtworkForValue(d.val, d.key);
+                    const thumb = chip.querySelector('.chip-thumb');
+                    if (thumb && art) {
+                        thumb.style.backgroundImage = `url('${art.url}'), url('${art.fallback}')`;
+                        thumb.title = `Obra 0${art.id}: ${art.title} (${art.file})`;
+                    }
+                    const valLabel = chip.querySelector('.chip-val-label');
+                    if (valLabel) {
+                        valLabel.textContent = d.val || 'Sin asignar';
+                    }
+                }
+            });
+
+            // 2. Update Solution Buttons: dynamic image backdrops change according to challenge variables
+            const nucleoArt = getArtworkForValue(currentChallenge.concepto, 'CONCEPTO');
+            const actionArt = getArtworkForValue(currentChallenge.accion, 'ACCIÓN');
+            const desafioArt = getArtworkForValue(currentChallenge.desafio, 'DESAFÍO');
+
+            const nucleoBtn = document.getElementById('nucleo-solution-btn');
+            if (nucleoBtn && nucleoArt) {
+                const bg = nucleoBtn.querySelector('.btn-art-backdrop');
+                if (bg) {
+                    bg.style.backgroundImage = `url('${nucleoArt.url}'), url('${nucleoArt.fallback}')`;
+                }
+            }
+
+            const standardBtn = document.getElementById('standard-solution-btn');
+            if (standardBtn && actionArt) {
+                const bg = standardBtn.querySelector('.btn-art-backdrop');
+                if (bg) {
+                    bg.style.backgroundImage = `url('${actionArt.url}'), url('${actionArt.fallback}')`;
+                }
+            }
+
+            const aiBtn = document.getElementById('ai-solution-btn');
+            if (aiBtn && desafioArt) {
+                const bg = aiBtn.querySelector('.btn-art-backdrop');
+                if (bg) {
+                    bg.style.backgroundImage = `url('${desafioArt.url}'), url('${desafioArt.fallback}')`;
+                }
+            }
+
+            // 3. Update navbar theme button thumbnail to mirror active artwork
+            if (themeBtnThumb && nucleoArt) {
+                themeBtnThumb.style.backgroundImage = `url('${nucleoArt.url}'), url('${nucleoArt.fallback}')`;
+            }
+        }
+
+        // 10.2 CYCLE A DIMENSION VARIABLE (PREV/NEXT STEPPER)
+        function cycleDimension(dimension, direction) {
+            playSound('click');
+            const dimMap = {
+                CONCEPTO: { arr: conceptos, prop: 'concepto' },
+                ACCIÓN: { arr: acciones, prop: 'accion' },
+                DESAFÍO: { arr: desafios, prop: 'desafio' },
+                CONTEXTO: { arr: contextos, prop: 'contexto' }
+            };
+            const item = dimMap[dimension];
+            if (!item) return;
+
+            const currentIndex = Math.max(0, item.arr.indexOf(currentChallenge[item.prop]));
+            const newIndex = (currentIndex + direction + item.arr.length) % item.arr.length;
+            currentChallenge[item.prop] = item.arr[newIndex];
+
+            renderChallengeBoard();
+            showToast(`${dimension}: ${currentChallenge[item.prop]}`, '🎨');
+        }
+
+        // 10.3 SOLUTION ART DOSSIER UPDATE
+        function updateSolutionArtDossier() {
+            if (!solutionArtBanner) return;
+            
+            const heroArt = getArtworkForValue(currentChallenge.concepto, 'CONCEPTO');
+
+            if (solutionArtHero) {
+                solutionArtHero.style.backgroundImage = `url('${heroArt.url}'), url('${heroArt.fallback}')`;
+            }
+            if (solutionArtName) {
+                solutionArtName.textContent = `Obra 0${heroArt.id} · ${heroArt.title}`;
+            }
+
+            if (solutionArtStrip) {
+                solutionArtStrip.innerHTML = '';
+                const dims = [
+                    { key: "CONCEPTO", val: currentChallenge.concepto },
+                    { key: "ACCIÓN", val: currentChallenge.accion },
+                    { key: "DESAFÍO", val: currentChallenge.desafio },
+                    { key: "CONTEXTO", val: currentChallenge.contexto }
+                ];
+
+                dims.forEach(dim => {
+                    const style = cardStyles[dim.key];
+                    const art = getArtworkForValue(dim.val, dim.key);
+
+                    const thumb = document.createElement('div');
+                    thumb.className = `w-8 h-8 rounded-md bg-cover bg-center border ${style.badgeBorder} cursor-pointer hover:scale-110 transition-transform shadow-sm relative group/th`;
+                    thumb.style.backgroundImage = `url('${art.url}'), url('${art.fallback}')`;
+                    thumb.title = `${dim.key}: ${art.title} (Haz clic para ampliar)`;
+                    thumb.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLightbox(art.id);
+                    });
+                    solutionArtStrip.appendChild(thumb);
+                });
+            }
+        }
+
+        // 10.4 RENDER CHALLENGE BOARD (FULL 30-ARTWORK INTEGRATION)
+        function renderChallengeBoard() {
+            challengeContainer.innerHTML = '';
+            
+            const dimensions = [
+                { key: "CONCEPTO", val: currentChallenge.concepto, array: conceptos },
+                { key: "ACCIÓN", val: currentChallenge.accion, array: acciones },
+                { key: "DESAFÍO", val: currentChallenge.desafio, array: desafios },
+                { key: "CONTEXTO", val: currentChallenge.contexto, array: contextos }
+            ];
+
+            dimensions.forEach((dim, idx) => {
+                const style = cardStyles[dim.key];
+                const isLocked = lockedCards[dim.key];
+                const valIndex = Math.max(0, dim.array.indexOf(dim.val));
+                
+                // Retrieve the precise artwork corresponding to this variable
+                const artInfo = getArtworkForValue(dim.val, dim.key);
+                const imgPath = artInfo.url;
+                const rawGithubUrl = artInfo.fallback;
+                const bgNum = artInfo.id;
+
+                const cardEl = document.createElement('div');
+                cardEl.className = `glass-panel rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between border ${style.border} relative overflow-hidden group hover:border-opacity-100 transition-all duration-300 animate-card-in shadow-xl hover:${style.glow}`;
+                cardEl.style.animationDelay = `${idx * 60}ms`;
+
+                cardEl.innerHTML = `
+                    <!-- UPPER TIER: HIGH-PROMINENCE ARTWORK WINDOW WITH CYCLING CONTROLS -->
+                    <div class="art-preview-window w-full h-44 sm:h-48 rounded-xl relative overflow-hidden mb-3 border border-white/10 group-hover:border-opacity-100 transition-all cursor-pointer shadow-md bg-slate-950" title="Haz clic para ver obra en alta resolución">
+                        <!-- Background artwork with smooth zoom on card hover -->
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+                             style="background-image: url('${imgPath}'), url('${rawGithubUrl}');">
+                        </div>
+
+                        <!-- Perimeter vignette for contrast -->
+                        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-transparent to-slate-950/80"></div>
+
+                        <!-- Top Floating Badges & Action Controls -->
+                        <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-auto">
+                            <!-- Dimension Badge -->
+                            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border ${style.badgeBorder}">
+                                <span class="text-xs">${style.emoji}</span>
+                                <span class="font-display font-bold text-[11px] uppercase tracking-wider ${style.text}">${dim.key}</span>
+                            </div>
+
+                            <!-- Stepper & Action Controls -->
+                            <div class="flex items-center gap-1 bg-slate-950/85 backdrop-blur-md p-1 rounded-lg border border-white/10">
+                                <button class="cycle-prev-btn p-1 rounded-md text-xs text-slate-300 hover:text-cyan-300 hover:bg-white/10 transition-colors" title="Variable anterior (cambiar imagen)">
+                                    ◀
+                                </button>
+                                <button class="cycle-next-btn p-1 rounded-md text-xs text-slate-300 hover:text-cyan-300 hover:bg-white/10 transition-colors" title="Variable siguiente (cambiar imagen)">
+                                    ▶
+                                </button>
+                                <button class="lock-btn p-1 rounded-md text-xs transition-colors ${isLocked ? 'text-amber-400 bg-amber-950/80 font-bold' : 'text-slate-300 hover:text-white'}" title="${isLocked ? 'Desbloquear dimensión' : 'Bloquear esta dimensión'}">
+                                    ${isLocked ? '🔒' : '🔓'}
+                                </button>
+                                <button class="inspect-art-btn p-1 rounded-md text-xs text-slate-300 hover:text-cyan-300 hover:bg-white/10 transition-colors" title="Ver obra en pantalla completa">
+                                    🔍
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Floating Artwork Title & File Badge -->
+                        <div class="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px] text-slate-300 pointer-events-none">
+                            <span class="font-mono bg-slate-950/85 backdrop-blur-md px-2 py-0.5 rounded border border-white/10 flex items-center gap-1 text-slate-200 truncate max-w-[130px]">
+                                <span>🎨</span> ${artInfo.file}
+                            </span>
+                            <span class="bg-slate-950/85 backdrop-blur-md px-2 py-0.5 rounded border border-white/10 text-cyan-300 truncate max-w-[130px]">
+                                ${artInfo.title}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- LOWER TIER: CHALLENGE STATEMENT & INTERACTIVE REROLL BUTTON -->
+                    <div class="px-1 flex flex-col justify-between flex-grow">
+                        <div class="mb-2">
+                            <p class="text-sm sm:text-base font-bold text-white leading-snug drop-shadow-sm min-h-[44px] flex items-center">
+                                ${dim.val}
+                            </p>
+                        </div>
+
+                        <!-- Card Footer with Individual Reroll Button -->
+                        <div class="pt-2 border-t border-white/10 flex flex-col gap-2">
+                            <div class="flex items-center justify-between text-[11px] text-slate-400">
+                                <span class="text-[10px] font-mono">Eje ${(idx + 1)}/4 · ${(valIndex + 1).toString().padStart(2, '0')}/12</span>
+                                <span class="text-[10px] font-medium px-2 py-0.5 rounded ${isLocked ? 'text-amber-300 font-semibold border border-amber-500/30 bg-amber-950/70' : 'text-slate-400 bg-slate-900/60'}">
+                                    ${isLocked ? '🔒 Fijado' : 'Aleatorio'}
+                                </span>
+                            </div>
+                            
+                            <button class="reroll-dim-btn w-full py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-xs font-medium text-slate-200 border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                                <span>🎲</span>
+                                <span>Girar este Eje</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Wire click on artwork window to open Lightbox
+                cardEl.querySelector('.art-preview-window').addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    openLightbox(bgNum);
+                });
+
+                cardEl.querySelector('.inspect-art-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openLightbox(bgNum);
+                });
+
+                // Steppers for previous / next variable & artwork
+                cardEl.querySelector('.cycle-prev-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    cycleDimension(dim.key, -1);
+                });
+
+                cardEl.querySelector('.cycle-next-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    cycleDimension(dim.key, 1);
+                });
+
+                // Wire lock & reroll buttons
+                cardEl.querySelector('.lock-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleLockDimension(dim.key);
+                });
+
+                cardEl.querySelector('.reroll-dim-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    rerollSingleDimension(dim.key);
+                });
+
+                challengeContainer.appendChild(cardEl);
+            });
+
+            // Update Progress Bar UI
+            updateLockProgressUI();
+
+            // Update Dynamic Artwork on all site buttons (Dimension Chips, Solution Buttons, Navbar Thumb)
+            updateDynamicButtonsArtwork();
+
+            // Update Summary Text
+            const summaryHTML = `En <strong class="text-emerald-400">${currentChallenge.contexto}</strong>, donde el desafío crítico es <strong class="text-rose-400">${currentChallenge.desafio}</strong>, tu reto es <strong class="text-amber-400">${currentChallenge.accion}</strong> aplicando el concepto guía de <strong class="text-cyan-400">${currentChallenge.concepto}</strong>.`;
+            challengeSummaryText.innerHTML = summaryHTML;
+            challengeSummary.classList.remove('hidden');
+
+            // Refresh solution art banner if solution display is active
+            if (!solutionDisplay.classList.contains('hidden')) {
+                updateSolutionArtDossier();
+            }
+
+            // Reset solution view on new challenge
+            solutionDisplay.classList.add('hidden');
+            solutionChoices.classList.remove('hidden');
+            solutionFallbackNotice.classList.add('hidden');
+            currentSolution = '';
+            currentAiSolution = '';
+            if (solutionContent) {
+                solutionContent.innerHTML = '';
+                solutionContent.classList.remove('content-fade-out', 'content-fade-in');
+            }
+        }
+
+        // Copy Synthesized Summary
+        copySummaryBtn.addEventListener('click', async () => {
+            const rawText = `En ${currentChallenge.contexto}, donde el desafío crítico es ${currentChallenge.desafio}, tu reto es ${currentChallenge.accion} aplicando el concepto guía de ${currentChallenge.concepto}.`;
+            try {
+                await navigator.clipboard.writeText(rawText);
+                copySummaryLabel.textContent = "¡Copiado!";
+                showToast("Síntesis copiada al portapapeles", "📋");
+                setTimeout(() => { copySummaryLabel.textContent = "Copiar"; }, 1600);
+            } catch (e) {
+                showToast("No se pudo copiar", "⚠️");
+            }
+        });
+
+        // 11. SOLUTION HANDLERS
+
+        // Pathway 1: Motor Núcleo (0 Tokens)
+        nucleoSolutionBtn.addEventListener('click', () => {
+            playSound('success');
+            solutionTitle.textContent = "⚡ Propuesta Estratégica Núcleo";
+            solutionBadge.textContent = "0 Tokens • Motor Local";
+            solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
+            solutionFallbackNotice.classList.add('hidden');
+            
+            currentSolution = generateNucleoSolution(currentChallenge);
+            currentAiSolution = currentSolution;
+            setSolutionContentSmoothly(currentSolution);
+            updateSolutionArtDossier();
+            
+            solutionChoices.classList.add('hidden');
+            solutionDisplay.classList.remove('hidden');
+            showToast("Solución generada al instante", "⚡");
+        });
+
+        // Pathway 2: Guía Metodológica en 4 Fases
+        standardSolutionBtn.addEventListener('click', () => {
+            playSound('click');
+            solutionTitle.textContent = "📋 Plan de Implementación en 4 Fases";
+            solutionBadge.textContent = "Metodología Colectiva";
+            solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-slate-500/40 text-slate-300 bg-slate-900/40";
+            solutionFallbackNotice.classList.add('hidden');
+
+            currentSolution = `
+                <div class="space-y-3 text-sm">
+                    <p class="text-slate-300">Hoja de ruta sugerida para articular la intervención en el territorio:</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                            <span class="text-cyan-400 font-bold text-xs uppercase block mb-0.5">Fase 1 · Inmersión & Diagnóstico</span>
+                            <p class="text-xs text-slate-300">Mapear en profundidad <em>${currentChallenge.contexto}</em> y escuchar a las voces afectadas por <em>${currentChallenge.desafio}</em>.</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                            <span class="text-amber-400 font-bold text-xs uppercase block mb-0.5">Fase 2 · Co-diseño con Comunidad</span>
+                            <p class="text-xs text-slate-300">Taller participativo para aterrizar la acción de <em>${currentChallenge.accion}</em> bajo el prisma de <em>${currentChallenge.concepto}</em>.</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                            <span class="text-rose-400 font-bold text-xs uppercase block mb-0.5">Fase 3 · Prototipo Experimental</span>
+                            <p class="text-xs text-slate-300">Montaje de una versión ágil, de bajo costo y evaluable en menos de 48 horas en el espacio real.</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                            <span class="text-emerald-400 font-bold text-xs uppercase block mb-0.5">Fase 4 · Escalabilidad & Redes</span>
+                            <p class="text-xs text-slate-300">Sistematización de aprendizajes para buscar alianzas públicas, comunitarias o fondos culturales.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            setSolutionContentSmoothly(currentSolution);
+            updateSolutionArtDossier();
+            solutionChoices.classList.add('hidden');
+            solutionDisplay.classList.remove('hidden');
+        });
+
+        // Pathway 3: Gemini IA (Con fallback automático a Núcleo si hay congestión)
+        aiSolutionBtn.addEventListener('click', async () => {
+            // If user has chosen offline mode, redirect instantly
+            if (activeEngineMode === 'offline') {
+                nucleoSolutionBtn.click();
+                return;
+            }
+
+            playSound('ai');
+            aiBtnText.textContent = "Procesando...";
+            aiBtnSpinner.classList.remove('hidden');
+            aiSolutionBtn.disabled = true;
+            solutionChoices.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+
+            const prompt = `Eres un mediador y diseñador estratégico de Núcleo Colectivo (Arte + Tecnología + Comunidad). Formula una propuesta creativa y concisa (máximo 1 párrafo directo y accionable) para este reto: Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}, Contexto: ${currentChallenge.contexto}. Sé inspirador, comunitario y realista.`;
+
+            try {
+                const apiRes = await callGeminiAPI(prompt, null, 250);
+                if (apiRes && apiRes.text) {
+                    currentAiSolution = apiRes.text;
+                    currentSolution = `<p class="text-base text-slate-200 leading-relaxed font-light">${apiRes.text}</p>`;
+                    solutionTitle.textContent = "🧠 Solución Gemini Flash Lite";
+                    solutionBadge.textContent = "Free Tier • Token Cap 250";
+                    solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-fuchsia-500/40 text-fuchsia-300 bg-fuchsia-950/40";
+                    solutionFallbackNotice.classList.add('hidden');
+                    setSolutionContentSmoothly(currentSolution);
+                    playSound('success');
+                } else {
+                    throw new Error("API response unavailable");
+                }
+            } catch (error) {
+                console.warn("Fallo o saturación en la API, activando Motor Núcleo:", error);
+                solutionFallbackNotice.classList.remove('hidden');
+                currentSolution = generateNucleoSolution(currentChallenge);
+                currentAiSolution = currentSolution;
+                solutionTitle.textContent = "⚡ Propuesta Estratégica Núcleo";
+                solutionBadge.textContent = "Modo Respaldo • 0 Tokens";
+                solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-950/40";
+                setSolutionContentSmoothly(currentSolution);
+                playSound('success');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                updateSolutionArtDossier();
+                solutionDisplay.classList.remove('hidden');
+                aiBtnText.textContent = "🧠 Ideación con Gemini IA";
+                aiBtnSpinner.classList.add('hidden');
+                aiSolutionBtn.disabled = false;
+            }
+        });
+
+        // Expand Idea Button
+        expandIdeaBtn.addEventListener('click', async () => {
+            playSound('ai');
+            expandBtnText.textContent = "Expandiendo...";
+            expandBtnSpinner.classList.remove('hidden');
+            expandIdeaBtn.disabled = true;
+
+            if (activeEngineMode === 'offline') {
+                const expanded = expandNucleoIdea(currentChallenge);
+                setSolutionContentSmoothly(`<div class="mt-4 pt-4 border-t border-white/10">${expanded}</div>`, true);
+                expandBtnText.textContent = "Idea Expandida ✓";
+                expandBtnSpinner.classList.add('hidden');
+                playSound('success');
+                showToast("Idea expandida con Motor Núcleo", "🚀");
+                return;
+            }
+
+            const prompt = `Como estratega de Núcleo Colectivo, toma esta idea para ${currentChallenge.contexto} y expándela muy concisamente. Concepto: ${currentChallenge.concepto}, Acción: ${currentChallenge.accion}, Desafío: ${currentChallenge.desafio}. Idea previa: "${currentAiSolution}". Responde con 3 puntos breves en Markdown: 1. **Colaboradores Clave:** 2. **Recursos de Bajo Costo:** 3. **Métricas de Éxito:**`;
+
+            try {
+                const apiRes = await callGeminiAPI(prompt, null, 280);
+                if (apiRes && apiRes.text) {
+                    let htmlResult = apiRes.text
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                        .replace(/\n\s*(-\s|\d\.\s)/g, '</li><li class="mt-1">')
+                        .replace(/\n/g, '<br>');
+                    if (htmlResult.includes('</li><li')) { 
+                        htmlResult = '<ul class="list-disc list-inside space-y-1 text-slate-300 text-sm mt-2">' + htmlResult.substring(5) + '</ul>'; 
+                    }
+                    setSolutionContentSmoothly(`<div class="mt-4 pt-4 border-t border-white/10"><h4 class="font-display font-bold text-sm text-cyan-300 mb-2">🚀 Desarrollo Estratégico</h4>${htmlResult}</div>`, true);
+                    playSound('success');
+                    showToast("Idea expandida por IA", "🚀");
+                } else {
+                    throw new Error("No expansion text");
+                }
+            } catch (e) {
+                console.warn("Fallback para expandir idea:", e);
+                const localExpanded = expandNucleoIdea(currentChallenge);
+                setSolutionContentSmoothly(`<div class="mt-4 pt-4 border-t border-white/10">${localExpanded}</div>`, true);
+                playSound('success');
+                showToast("Idea expandida con respaldo local", "💡");
+            } finally {
+                expandBtnText.textContent = "Idea Expandida ✓";
+                expandBtnSpinner.classList.add('hidden');
+            }
+        });
+
+        // Reimaginar Reto Inédito
+        reimaginarRetoBtn.addEventListener('click', async () => {
+            playSound('ai');
+            reimagineBtnText.textContent = "Reimaginando...";
+            reimagineBtnSpinner.classList.remove('hidden');
+            reimaginarRetoBtn.disabled = true;
+
+            if (activeEngineMode === 'offline') {
+                const localItem = getRandomItem(retosReimaginadosLocales);
+                currentChallenge = {
+                    id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    ...localItem
+                };
+                renderChallengeBoard();
+                reimagineBtnText.textContent = "🤖 Reimaginar Reto Inédito";
+                reimagineBtnSpinner.classList.add('hidden');
+                reimaginarRetoBtn.disabled = false;
+                playSound('success');
+                showToast("Reto inédito generado", "✨");
+                return;
+            }
+
+            const prompt = `Genera un reto de innovación social completamente inédito para "Reto Creativo" de Núcleo Colectivo (Arte + Tecnología + Comunidad). Devuelve JSON con: "concepto", "accion", "desafio", "contexto". Sé breve y vanguardista.`;
+            const schema = {
+                type: "object",
+                properties: {
+                    "concepto": { "type": "string" },
+                    "accion": { "type": "string" },
+                    "desafio": { "type": "string" },
+                    "contexto": { "type": "string" }
+                },
+                required: ["concepto", "accion", "desafio", "contexto"]
+            };
+
+            try {
+                const apiRes = await callGeminiAPI(prompt, schema, 200);
+                if (apiRes && apiRes.text) {
+                    const parsed = JSON.parse(apiRes.text);
+                    currentChallenge = {
+                        id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+                        concepto: parsed.concepto,
+                        accion: parsed.accion,
+                        desafio: parsed.desafio,
+                        contexto: parsed.contexto
+                    };
+                    renderChallengeBoard();
+                    playSound('success');
+                    showToast("Reto inédito creado con Gemini", "✨");
+                } else {
+                    throw new Error("No parsed data");
+                }
+            } catch (e) {
+                console.warn("Fallback para reimaginar:", e);
+                const localItem = getRandomItem(retosReimaginadosLocales);
+                currentChallenge = {
+                    id: 'RET-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    ...localItem
+                };
+                renderChallengeBoard();
+                playSound('success');
+                showToast("Reto inédito creado con motor local", "✨");
+            } finally {
+                reimagineBtnText.textContent = "🤖 Reimaginar Reto Inédito";
+                reimagineBtnSpinner.classList.add('hidden');
+                reimaginarRetoBtn.disabled = false;
+            }
+        });
+
+        // Copy Full Solution Text
+        copySolutionBtn.addEventListener('click', async () => {
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = solutionContent.innerHTML;
+                const text = tempDiv.innerText || tempDiv.textContent;
+                await navigator.clipboard.writeText(text);
+                copySolutionText.textContent = "¡Copiado!";
+                showToast("Propuesta copiada al portapapeles", "📋");
+                setTimeout(() => { copySolutionText.textContent = "Copiar texto"; }, 1600);
+            } catch (e) {
+                showToast("No se pudo copiar", "⚠️");
+            }
+        });
+
+        // Save Challenge Button
+        saveChallengeBtn.addEventListener('click', () => {
+            playSound('click');
+            const items = getSavedChallenges();
+            const exists = items.some(i => i.id === currentChallenge.id || (
+                i.concepto === currentChallenge.concepto && 
+                i.accion === currentChallenge.accion && 
+                i.desafio === currentChallenge.desafio && 
+                i.contexto === currentChallenge.contexto
+            ));
+
+            if (!exists) {
+                items.unshift({
+                    ...currentChallenge,
+                    solution: currentSolution || generateNucleoSolution(currentChallenge),
+                    timestamp: Date.now()
+                });
+                saveChallenges(items);
+                saveBtnText.textContent = "¡Guardado en ⭐!";
+                showToast("Reto guardado en favoritos", "⭐");
+                setTimeout(() => { saveBtnText.textContent = "Guardar Reto"; }, 1800);
+            } else {
+                saveBtnText.textContent = "Ya estaba guardado";
+                showToast("Este reto ya está en tus guardados", "ℹ️");
+                setTimeout(() => { saveBtnText.textContent = "Guardar Reto"; }, 1800);
+            }
+        });
+
+        // 12. EXPORT FICHA DE RETO (WORKSHOP PRINTABLE WORKSHEET)
+        exportSheetBtn.addEventListener('click', () => {
+            playSound('click');
+            wsDate.textContent = currentChallenge.date || new Date().toLocaleDateString('es-ES');
+            wsId.textContent = currentChallenge.id || 'RET-001';
+            wsConcepto.textContent = currentChallenge.concepto;
+            wsAccion.textContent = currentChallenge.accion;
+            wsDesafio.textContent = currentChallenge.desafio;
+            wsContexto.textContent = currentChallenge.contexto;
+            wsSintesis.textContent = challengeSummaryText.innerText || challengeSummaryText.textContent;
+            
+            // Populate worksheet artwork previews
+            const cIdx = Math.max(0, conceptos.indexOf(currentChallenge.concepto));
+            const aIdx = Math.max(0, acciones.indexOf(currentChallenge.accion));
+            const dIdx = Math.max(0, desafios.indexOf(currentChallenge.desafio));
+            const ctxIdx = Math.max(0, contextos.indexOf(currentChallenge.contexto));
+
+            const cImg = cardStyles.CONCEPTO.artworks[cIdx % cardStyles.CONCEPTO.artworks.length];
+            const aImg = cardStyles.ACCIÓN.artworks[aIdx % cardStyles.ACCIÓN.artworks.length];
+            const dImg = cardStyles.DESAFÍO.artworks[dIdx % cardStyles.DESAFÍO.artworks.length];
+            const ctxImg = cardStyles.CONTEXTO.artworks[ctxIdx % cardStyles.CONTEXTO.artworks.length];
+
+            if (wsArtConcepto) wsArtConcepto.style.backgroundImage = `url('${cImg}')`;
+            if (wsArtAccion) wsArtAccion.style.backgroundImage = `url('${aImg}')`;
+            if (wsArtDesafio) wsArtDesafio.style.backgroundImage = `url('${dImg}')`;
+            if (wsArtContexto) wsArtContexto.style.backgroundImage = `url('${ctxImg}')`;
+
+            // Set proposed solution in worksheet
+            if (currentSolution) {
+                wsSolucion.innerHTML = currentSolution;
+            } else {
+                wsSolucion.innerHTML = generateNucleoSolution(currentChallenge);
+            }
+
+            exportModal.classList.remove('hidden');
+        });
+
+        closeExportModalBtn.addEventListener('click', () => {
+            exportModal.classList.add('hidden');
+        });
+
+        printNowBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        // 13. SAVED CHALLENGES MODAL
+        navSavedBtn.addEventListener('click', () => {
+            playSound('click');
+            renderSavedList();
+            savedModal.classList.remove('hidden');
+        });
+
+        closeSavedModalBtn.addEventListener('click', () => {
+            savedModal.classList.add('hidden');
+        });
+
+        function renderSavedList(filterText = '') {
+            const items = getSavedChallenges();
+            savedList.innerHTML = '';
+
+            const filtered = items.filter(item => {
+                if (!filterText) return true;
+                const q = filterText.toLowerCase();
+                return (item.concepto && item.concepto.toLowerCase().includes(q)) ||
+                       (item.contexto && item.contexto.toLowerCase().includes(q)) ||
+                       (item.desafio && item.desafio.toLowerCase().includes(q));
+            });
+
+            if (filtered.length === 0) {
+                savedList.innerHTML = `
+                    <div class="text-center py-8 text-slate-500 text-xs">
+                        ${items.length === 0 ? 'Aún no has guardado ningún reto. Pulsa "Guardar Reto" en cualquier sesión.' : 'No se encontraron retos coincidentes.'}
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'glass-panel p-3.5 rounded-xl border border-white/5 hover:border-cyan-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+                
+                const cIdx = Math.max(0, conceptos.indexOf(item.concepto));
+                const aIdx = Math.max(0, acciones.indexOf(item.accion));
+                const dIdx = Math.max(0, desafios.indexOf(item.desafio));
+                const ctxIdx = Math.max(0, contextos.indexOf(item.contexto));
+
+                const cImg = cardStyles.CONCEPTO.artworks[cIdx % cardStyles.CONCEPTO.artworks.length];
+                const aImg = cardStyles.ACCIÓN.artworks[aIdx % cardStyles.ACCIÓN.artworks.length];
+                const dImg = cardStyles.DESAFÍO.artworks[dIdx % cardStyles.DESAFÍO.artworks.length];
+                const ctxImg = cardStyles.CONTEXTO.artworks[ctxIdx % cardStyles.CONTEXTO.artworks.length];
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <!-- 4 Mini Thumbnails Palette -->
+                        <div class="flex items-center gap-1 shrink-0">
+                            <div class="w-8 h-8 rounded bg-cover bg-center border border-cyan-500/30 shadow-sm" style="background-image: url('${cImg}')" title="Concepto"></div>
+                            <div class="w-8 h-8 rounded bg-cover bg-center border border-amber-500/30 shadow-sm" style="background-image: url('${aImg}')" title="Acción"></div>
+                            <div class="w-8 h-8 rounded bg-cover bg-center border border-rose-500/30 shadow-sm" style="background-image: url('${dImg}')" title="Desafío"></div>
+                            <div class="w-8 h-8 rounded bg-cover bg-center border border-emerald-500/30 shadow-sm" style="background-image: url('${ctxImg}')" title="Contexto"></div>
+                        </div>
+
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="font-mono text-cyan-400 font-bold">${item.id || 'RET'}</span>
+                                <span class="text-slate-500">·</span>
+                                <span class="text-slate-400 text-[11px]">${item.date || 'Reciente'}</span>
+                            </div>
+                            <h4 class="font-semibold text-slate-100 text-sm">
+                                ${item.concepto} + ${item.accion}
+                            </h4>
+                            <p class="text-xs text-slate-400">
+                                En <span class="text-emerald-300">${item.contexto}</span> · Desafío: <span class="text-rose-300">${item.desafio}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <button class="load-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 transition-colors">
+                            Cargar
+                        </button>
+                        <button class="delete-btn text-xs text-slate-500 hover:text-rose-400 p-1 transition-colors" title="Eliminar">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+
+                row.querySelector('.load-btn').addEventListener('click', () => {
+                    currentChallenge = { ...item };
+                    renderChallengeBoard();
+                    if (item.solution) {
+                        currentSolution = item.solution;
+                        currentAiSolution = item.solution;
+                        solutionTitle.textContent = "⭐ Reto Guardado Cargado";
+                        solutionBadge.textContent = "Colección Personal";
+                        solutionBadge.className = "text-[11px] font-mono px-2.5 py-0.5 rounded-full border border-amber-500/40 text-amber-300 bg-amber-950/40";
+                        solutionChoices.classList.add('hidden');
+                        solutionDisplay.classList.remove('hidden');
+                        setSolutionContentSmoothly(item.solution);
+                        updateSolutionArtDossier();
+                    }
+                    savedModal.classList.add('hidden');
+                    showToast("Reto cargado en la mesa", "🎲");
+                });
+
+                row.querySelector('.delete-btn').addEventListener('click', () => {
+                    const updated = getSavedChallenges().filter(c => c.id !== item.id);
+                    saveChallenges(updated);
+                    renderSavedList(savedSearchInput.value);
+                    showToast("Reto eliminado de favoritos", "🗑️");
+                });
+
+                savedList.appendChild(row);
+            });
+        }
+
+        savedSearchInput.addEventListener('input', (e) => {
+            renderSavedList(e.target.value);
+        });
+
+        clearAllSavedBtn.addEventListener('click', () => {
+            if (confirm("¿Deseas eliminar todos los retos guardados?")) {
+                saveChallenges([]);
+                renderSavedList();
+                showToast("Lista de guardados vaciada");
+            }
+        });
+
+        // 14. METHODOLOGY MODAL
+        navMethodBtn.addEventListener('click', () => {
+            methodModal.classList.remove('hidden');
+        });
+        quickMethodBtn.addEventListener('click', () => {
+            methodModal.classList.remove('hidden');
+        });
+        footerMethodLink.addEventListener('click', () => {
+            methodModal.classList.remove('hidden');
+        });
+        closeMethodModalBtn.addEventListener('click', () => {
+            methodModal.classList.add('hidden');
+        });
+
+        // 15. START BUTTON & TOP NAVIGATION
+        startButton.addEventListener('click', async () => {
+            await initializeAudio();
+            playSound('start');
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            generateFullChallenge();
+        });
+
+        navDeckBtn.addEventListener('click', () => {
+            if (gameScreen.classList.contains('hidden')) {
+                startButton.click();
+            }
+        });
+
+        rerollAllBtn.addEventListener('click', () => {
+            generateFullChallenge();
+        });
+
+        // 15.1 WIRE DIMENSION LOCK CHIPS & UNLOCK ALL BUTTON
+        document.querySelectorAll('.dim-lock-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const dim = chip.dataset.dim;
+                if (dim) toggleLockDimension(dim);
+            });
+        });
+
+        const unlockAllBtn = document.getElementById('unlock-all-btn');
+        if (unlockAllBtn) {
+            unlockAllBtn.addEventListener('click', () => {
+                unlockAllDimensions();
+            });
+        }
+
+        // 16. GLOBAL KEYBOARD SHORTCUTS
+        document.addEventListener('keydown', (e) => {
+            // Spacebar spins the deck if on game screen and not typing in an input
+            if (e.code === 'Space' && !gameScreen.classList.contains('hidden') && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                generateFullChallenge();
+            }
+            // Escape closes all modals & dropdowns
+            if (e.key === 'Escape') {
+                savedModal.classList.add('hidden');
+                methodModal.classList.add('hidden');
+                exportModal.classList.add('hidden');
+                if (galleryModal) galleryModal.classList.add('hidden');
+                if (artworkLightboxModal) artworkLightboxModal.classList.add('hidden');
+                if (themeDropdown) themeDropdown.classList.add('hidden');
+            }
+        });
+
+        // Close modals clicking on backdrop
+        [savedModal, methodModal, exportModal, galleryModal, artworkLightboxModal].forEach(modal => {
+            if (!modal) return;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+        // 17. GALLERY & LIGHTBOX MODALS CONTROLLER
+        function openLightbox(artworkOrId) {
+            playSound('click');
+            const id = typeof artworkOrId === 'number' ? artworkOrId : artworkOrId?.id || 1;
+            const artwork = nucleoArtworks.find(a => a.id === id) || nucleoArtworks[0];
+            activeLightboxArtwork = artwork;
+
+            if (lightboxImg) {
+                lightboxImg.src = artwork.url;
+                lightboxImg.onerror = () => { lightboxImg.src = artwork.fallback; };
+                lightboxImg.alt = `${artwork.title} - Núcleo Colectivo`;
+            }
+            if (lightboxTitle) lightboxTitle.textContent = artwork.title;
+            if (lightboxDesc) lightboxDesc.textContent = artwork.desc;
+            if (lightboxDimBadge) {
+                const style = cardStyles[artwork.dimension];
+                lightboxDimBadge.textContent = `${artwork.dimIcon} ${artwork.dimension}`;
+                lightboxDimBadge.className = `text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${style ? style.badgeBorder : 'border-cyan-500/30'} ${style ? style.text : 'text-cyan-300'} bg-slate-900/80`;
+            }
+            if (lightboxFileBadge) {
+                lightboxFileBadge.textContent = `Obra 0${artwork.id} · ${artwork.file}`;
+            }
+            if (lightboxDownloadLink) {
+                lightboxDownloadLink.href = artwork.url;
+                lightboxDownloadLink.setAttribute('download', artwork.file);
+            }
+
+            if (artworkLightboxModal) {
+                artworkLightboxModal.classList.remove('hidden');
+            }
+        }
+
+        function closeLightbox() {
+            if (artworkLightboxModal) {
+                artworkLightboxModal.classList.add('hidden');
+            }
+        }
+
+        if (closeLightboxBtn) {
+            closeLightboxBtn.addEventListener('click', closeLightbox);
+        }
+
+        if (lightboxSetBgBtn) {
+            lightboxSetBgBtn.addEventListener('click', () => {
+                if (activeLightboxArtwork) {
+                    applyTheme('obra' + activeLightboxArtwork.id, true);
+                    closeLightbox();
+                }
+            });
+        }
+
+        // 18. AMBIENT ATMOSPHERE THEMES LOGIC (CATÁLOGO DE 30 FONDOS NÚCLEO COLECTIVO)
+        const ambientThemes = {};
+        nucleoArtworks.forEach(art => {
+            ambientThemes['obra' + art.id] = {
+                id: 'obra' + art.id,
+                name: `Obra ${art.id.toString().padStart(2, '0')} · ${art.title}`,
+                short: `Obra ${art.id.toString().padStart(2, '0')}`,
+                icon: art.dimIcon || '🎨',
+                file: art.file,
+                url: art.url,
+                fallback: art.fallback,
+                style: `radial-gradient(ellipse at 50% 15%, rgba(6, 182, 212, 0.20) 0%, transparent 65%), linear-gradient(to bottom, rgba(6, 9, 17, 0.65) 0%, rgba(6, 9, 17, 0.40) 45%, rgba(6, 9, 17, 0.88) 100%), url('${art.url}'), url('${art.fallback}')`
+            };
+        });
+
+        const themeKeys = Object.keys(ambientThemes);
+        const ambientBgLayer = document.querySelector('.ambient-bg-layer');
+        const themeSelectorBtn = document.getElementById('theme-selector-btn');
+        const cycleThemeBtn = document.getElementById('cycle-theme-btn');
+        const themeDropdown = document.getElementById('theme-dropdown');
+        const themeBtnIcon = document.getElementById('theme-btn-icon');
+        const themeBtnLabel = document.getElementById('theme-btn-label');
+        const themeOptionBtns = document.querySelectorAll('.theme-option-btn');
+
+        let currentThemeId = 'obra1';
+
+        function applyTheme(themeKey, notify = true) {
+            const theme = ambientThemes[themeKey] || ambientThemes.obra1;
+            currentThemeId = theme.id;
+
+            if (ambientBgLayer) {
+                ambientBgLayer.style.backgroundImage = theme.style;
+            }
+            if (themeBtnIcon) themeBtnIcon.textContent = theme.icon;
+            if (themeBtnLabel) themeBtnLabel.textContent = theme.short;
+            if (themeBtnThumb && theme.url) {
+                themeBtnThumb.style.backgroundImage = `url('${theme.url}'), url('${theme.fallback}')`;
+            }
+            
+            themeOptionBtns.forEach(btn => {
+                const isSelected = btn.dataset.theme === theme.id;
+                const check = btn.querySelector('.theme-check');
+                if (check) {
+                    if (isSelected) {
+                        check.classList.remove('hidden');
+                    } else {
+                        check.classList.add('hidden');
+                    }
+                }
+            });
+
+            localStorage.setItem('nucleo_ambient_theme', theme.id);
+            if (notify) {
+                showToast(`Fondo de Taller: ${theme.name}`, theme.icon);
+                playSound('click');
+            }
+        }
+
+        function cycleNextTheme() {
+            const currentIndex = themeKeys.indexOf(currentThemeId);
+            const nextIndex = (currentIndex + 1) % themeKeys.length;
+            const nextKey = themeKeys[nextIndex];
+            applyTheme(nextKey, true);
+        }
+
+        if (cycleThemeBtn) {
+            cycleThemeBtn.addEventListener('click', () => {
+                cycleNextTheme();
+            });
+        }
+
+        if (themeSelectorBtn && themeDropdown) {
+            themeSelectorBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeDropdown.classList.toggle('hidden');
+            });
+
+            themeOptionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const chosen = btn.dataset.theme;
+                    applyTheme(chosen, true);
+                    themeDropdown.classList.add('hidden');
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!themeDropdown.classList.contains('hidden') && !themeSelectorBtn.contains(e.target)) {
+                    themeDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // Initial setup on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSavedCounters();
+            const savedTheme = localStorage.getItem('nucleo_ambient_theme') || 'obra1';
+            applyTheme(savedTheme, false);
+        });
+    </script>
 </body>
 </html>

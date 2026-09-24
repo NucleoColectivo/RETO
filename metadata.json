@@ -1,13 +1,7 @@
 {
   "name": "Reto Creativo Interactivo",
-  "version": "2.0",
-  "description": "Laboratorio local de ideación y experimentación creativa por Núcleo Colectivo.",
+  "description": "Una herramienta de ideación interactiva por Núcleo Colectivo para generar retos creativos impulsados por IA.",
   "majorCapabilities": [
-    "16 categorías creativas",
-    "6 dimensiones de reto",
-    "motor local sin IA",
-    "combinaciones aleatorias",
-    "retos guardados",
-    "exportación para talleres"
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]
 }
