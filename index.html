@@ -805,8 +805,8 @@ function updateCategoryUI(){
 }
 
 function filteredPool(key){
-  if(currentCategory!=="ALL") return getPool(currentCategory,key);
-  return getPool("ALL",key);
+  const activeId=currentCategory==="ALL" ? currentChallenge.category : currentCategory;
+  return getPool(activeId,key);
 }
 
 function generateFullChallenge(){
