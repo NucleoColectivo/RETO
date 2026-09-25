@@ -61,29 +61,66 @@
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #080c14 !important;
             color: #f1f5f9;
             min-height: 100vh;
             position: relative;
-        }
-
-        /* Fixed Artistic Background Layer from Núcleo Colectivo */
-        .ambient-bg-layer {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
             background-color: #060911;
             background-image: 
-                radial-gradient(ellipse at 50% 15%, rgba(6, 182, 212, 0.20) 0%, transparent 65%),
-                radial-gradient(ellipse at 85% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 55%),
-                linear-gradient(to bottom, rgba(6, 9, 17, 0.55) 0%, rgba(6, 9, 17, 0.35) 45%, rgba(6, 9, 17, 0.85) 100%),
-                url('/backgrounds/background-14-cosmic-digital.jpg'),
+                linear-gradient(rgba(0, 0, 0, 0.50), rgba(0, 0, 0, 0.50)),
+                radial-gradient(ellipse at 50% 25%, rgba(6, 182, 212, 0.16) 0%, transparent 65%),
+                linear-gradient(to bottom, rgba(5, 8, 16, 0.40) 0%, rgba(5, 8, 16, 0.15) 45%, rgba(5, 8, 16, 0.65) 100%),
+                url('./backgrounds/background-14-cosmic-digital.jpg'),
+                url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-14-cosmic-digital.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        /* Fixed Artistic Background Layer from Núcleo Colectivo (Vibrant Fullscreen) */
+        .ambient-bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background-color: transparent;
+            background-image: 
+                url('./backgrounds/background-14-cosmic-digital.jpg'), 
                 url('https://raw.githubusercontent.com/NucleoColectivo/RETO/main/backgrounds/background-14-cosmic-digital.jpg');
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
             pointer-events: none;
-            transition: background-image 0.6s ease-in-out;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* Capa de color negro 50% al fondo (solicitada por el usuario) */
+        .ambient-dark-scrim {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            background-color: rgba(0, 0, 0, 0.50);
+            transition: background-color 0.4s ease, opacity 0.4s ease;
+        }
+
+        /* Ambient Scrim & Vignette: Enhances contrast and legibility while preserving artwork vibrance */
+        .ambient-bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            pointer-events: none;
+            background: 
+                radial-gradient(ellipse at 50% 25%, rgba(6, 182, 212, 0.16) 0%, transparent 65%),
+                linear-gradient(to bottom, rgba(5, 8, 16, 0.40) 0%, rgba(5, 8, 16, 0.15) 45%, rgba(5, 8, 16, 0.65) 100%);
         }
 
         /* Responsive container protection and anti-overflow reset */
@@ -116,6 +153,20 @@
             box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
+        }
+
+        /* High-visibility Hero Title Styling */
+        .hero-title-white {
+            color: #ffffff;
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85);
+        }
+
+        .hero-title-cyan {
+            color: #22d3ee;
+            text-shadow: 
+                0 0 35px rgba(6, 182, 212, 0.85),
+                0 4px 24px rgba(0, 0, 0, 0.95),
+                0 2px 6px rgba(0, 0, 0, 0.85);
         }
 
         /* Text glow and shadow for pristine legibility */
@@ -210,6 +261,9 @@
 
     <!-- Fixed Art Backdrop Layer with Measured Scrim -->
     <div class="ambient-bg-layer" aria-hidden="true"></div>
+    <!-- Capa de color negro 50% al fondo solicitada por el usuario -->
+    <div id="ambient-dark-scrim" class="ambient-dark-scrim" aria-hidden="true"></div>
+    <div class="ambient-bg-overlay" aria-hidden="true"></div>
 
     <!-- Toast Notification Container -->
     <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-xl text-sm font-medium">
@@ -218,15 +272,15 @@
     </div>
 
     <!-- MAIN APP WRAPPER: Expansive Fullscreen Architecture for Mobile & PC -->
-    <div class="min-h-screen flex flex-col justify-between w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4">
+    <div class="relative z-10 min-h-screen flex flex-col justify-between w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4">
         
         <!-- 1. TOP BAR CONTRACT: Brand — Nav/Toggles — Actions/Controls -->
         <header class="glass-panel rounded-2xl px-4 sm:px-6 py-3 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 sm:gap-4 border border-white/10 mb-4 sm:mb-6 w-full">
             
             <!-- Zone 1: Single Element Brand Wordmark (Interactive link to Home) -->
             <button id="brand-home-btn" class="flex items-center gap-3 text-left group cursor-pointer focus:outline-none bg-transparent border-0 p-0">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-anton text-white text-base shadow-sm group-hover:scale-105 transition-transform">
-                    N
+                <div class="w-9 h-9 rounded-xl bg-slate-900/90 border border-cyan-500/40 flex items-center justify-center p-1 shadow-md group-hover:scale-105 transition-transform overflow-hidden">
+                    <img src="/img/icono_nucleo.png" alt="Núcleo Colectivo" class="w-full h-full object-contain" />
                 </div>
                 <div class="flex flex-col">
                     <span class="font-anton tracking-wide text-lg text-white uppercase flex items-center gap-2">
@@ -290,8 +344,8 @@
                     </div>
 
                     <h1 class="font-anton text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider uppercase mb-6 leading-[0.92] select-none">
-                        <span class="text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">Cruza ideas.</span> <br class="hidden sm:inline"/>
-                        <span class="text-cyan-400 drop-shadow-[0_0_35px_rgba(6,182,212,0.85)] drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)]">
+                        <span class="hero-title-white">Cruza ideas.</span> <br class="hidden sm:inline"/>
+                        <span class="hero-title-cyan">
                             Detona futuros.
                         </span>
                     </h1>
@@ -350,7 +404,7 @@
                         <div class="relative z-10">
                             <p class="text-base font-bold text-white drop-shadow-md leading-snug mb-1">Metáfora o Principio Rector</p>
                             <p class="text-xs text-slate-300 font-light leading-relaxed">El paradigma teórico, estético o tecnológico que inspira la intervención.</p>
-                            <span class="inline-block mt-2 text-[11px] text-cyan-300/90 font-medium font-mono">12 Variables Guía</span>
+                            <span class="inline-block mt-2 text-[11px] text-cyan-300/90 font-medium font-mono">36 Variables Guía · 6 Temas</span>
                         </div>
                     </div>
 
@@ -366,7 +420,7 @@
                         <div class="relative z-10">
                             <p class="text-base font-bold text-white drop-shadow-md leading-snug mb-1">Intervención o Prototipo</p>
                             <p class="text-xs text-slate-300 font-light leading-relaxed">El formato material, digital o escénico en el que se plasma la solución.</p>
-                            <span class="inline-block mt-2 text-[11px] text-amber-300/90 font-medium font-mono">12 Formatos de Obra</span>
+                            <span class="inline-block mt-2 text-[11px] text-amber-300/90 font-medium font-mono">36 Formatos de Obra · 6 Temas</span>
                         </div>
                     </div>
 
@@ -382,7 +436,7 @@
                         <div class="relative z-10">
                             <p class="text-base font-bold text-white drop-shadow-md leading-snug mb-1">Tensión Crítica o Dilema</p>
                             <p class="text-xs text-slate-300 font-light leading-relaxed">La restricción, conflicto social o barrera contextual que debe transformarse.</p>
-                            <span class="inline-block mt-2 text-[11px] text-rose-300/90 font-medium font-mono">12 Fricciones Reales</span>
+                            <span class="inline-block mt-2 text-[11px] text-rose-300/90 font-medium font-mono">36 Fricciones Reales · 6 Temas</span>
                         </div>
                     </div>
 
@@ -398,7 +452,7 @@
                         <div class="relative z-10">
                             <p class="text-base font-bold text-white drop-shadow-md leading-snug mb-1">Territorio & Comunidad</p>
                             <p class="text-xs text-slate-300 font-light leading-relaxed">El ecosistema vivo, espacio comunitario o institución donde ocurre la acción.</p>
-                            <span class="inline-block mt-2 text-[11px] text-emerald-300/90 font-medium font-mono">12 Espacios Situados</span>
+                            <span class="inline-block mt-2 text-[11px] text-emerald-300/90 font-medium font-mono">36 Espacios Situados · 6 Temas</span>
                         </div>
                     </div>
                 </div>
@@ -460,6 +514,10 @@
                     </div>
                     
                     <div class="flex items-center gap-2">
+                        <button id="open-theme-selector-all-btn" title="Seleccionar manualmente variables según temas de interés" class="px-3.5 py-2 rounded-lg font-anton text-xs tracking-wider uppercase bg-slate-900/90 hover:bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer">
+                            <span>🎯</span>
+                            <span>Seleccionar por Temas</span>
+                        </button>
                         <button id="reroll-all-btn" class="px-4 py-2 rounded-lg font-anton text-xs tracking-wider uppercase bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer">
                             <span>🎲</span>
                             <span>Girar Todo el Mazo</span>
@@ -913,39 +971,331 @@
         </div>
     </div>
 
+    <!-- MODAL 6: MANUAL SELECTION BY THEMES OF INTEREST (SELECTOR TEMÁTICO) -->
+    <div id="theme-selector-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="glass-panel-elevated rounded-2xl w-full max-w-4xl border border-white/15 max-h-[92vh] flex flex-col shadow-2xl animate-card-in overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 bg-slate-950/70">
+                <div class="flex items-center gap-2.5">
+                    <span id="theme-modal-dim-icon" class="text-2xl select-none">🎯</span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">Selección Manual</span>
+                            <span class="text-slate-500 text-xs">·</span>
+                            <span id="theme-modal-count-badge" class="text-[10px] font-mono px-2 py-0.2 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-300">36 Opciones</span>
+                        </div>
+                        <h2 id="theme-modal-title" class="font-anton text-xl sm:text-2xl tracking-wider text-white uppercase mt-0.5">
+                            Seleccionar Variable por Tema de Interés
+                        </h2>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="theme-modal-random-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer" title="Seleccionar una opción al azar dentro del tema activo">
+                        <span>🎲</span>
+                        <span class="hidden sm:inline">Aleatorio en este tema</span>
+                    </button>
+                    <button id="close-theme-modal-btn" class="text-slate-400 hover:text-white text-xl p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+                        ✕
+                    </button>
+                </div>
+            </div>
 
+            <!-- Dimension Switcher Tabs (CONCEPTO, ACCIÓN, DESAFÍO, CONTEXTO) -->
+            <div class="p-2 sm:p-2.5 bg-slate-900/80 border-b border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <button type="button" data-dim="CONCEPTO" class="theme-dim-tab flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-anton tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 bg-cyan-950/60 text-cyan-300 cursor-pointer">
+                    <span>💡</span>
+                    <span>CONCEPTO</span>
+                </button>
+                <button type="button" data-dim="ACCIÓN" class="theme-dim-tab flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-anton tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 border border-white/10 bg-slate-900/50 text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <span>🛠️</span>
+                    <span>ACCIÓN</span>
+                </button>
+                <button type="button" data-dim="DESAFÍO" class="theme-dim-tab flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-anton tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 border border-white/10 bg-slate-900/50 text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <span>🔥</span>
+                    <span>DESAFÍO</span>
+                </button>
+                <button type="button" data-dim="CONTEXTO" class="theme-dim-tab flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-anton tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 border border-white/10 bg-slate-900/50 text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <span>🌍</span>
+                    <span>CONTEXTO</span>
+                </button>
+            </div>
+
+            <!-- Filter Controls: Temas de Interés & Search Bar -->
+            <div class="p-3 sm:p-4 bg-slate-950/60 border-b border-white/5 space-y-3">
+                <!-- Search input -->
+                <div class="relative">
+                    <input id="theme-search-input" type="text" placeholder="Buscar por palabra clave (ej. sensores, ecología, fanzine, IA, huerto, memoria)..." 
+                           class="w-full bg-slate-900/90 border border-white/15 rounded-xl px-3.5 py-2 pl-9 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors">
+                    <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+                </div>
+
+                <!-- 7 Thematic Pills (Temas de Interés) -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs" id="theme-categories-bar">
+                    <button type="button" data-theme="todos" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-cyan-500 text-slate-950 font-bold shadow-sm cursor-pointer">
+                        🌐 Todos (36)
+                    </button>
+                    <button type="button" data-theme="ecologia" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        🌿 Ecología & Territorio
+                    </button>
+                    <button type="button" data-theme="ia" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        🤖 IA & Tecnologías Críticas
+                    </button>
+                    <button type="button" data-theme="arte" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        🎨 Arte & Nuevos Medios
+                    </button>
+                    <button type="button" data-theme="comunidad" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        👥 Comunidad & Cuidados
+                    </button>
+                    <button type="button" data-theme="educacion" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        📚 Educación & Pedagogías
+                    </button>
+                    <button type="button" data-theme="ciudad" class="theme-cat-pill shrink-0 px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 cursor-pointer">
+                        🏙️ Espacio Público & Ciudad
+                    </button>
+                </div>
+            </div>
+
+            <!-- Items Grid Container -->
+            <div id="theme-items-grid" class="p-3.5 sm:p-4 overflow-y-auto max-h-[50vh] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                <!-- Injected dynamically via JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 sm:p-4 bg-slate-950/80 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                <div class="flex items-center gap-1.5">
+                    <span>💡</span>
+                    <span>Haz clic sobre cualquier tarjeta para seleccionarla y actualizar la Mesa de Reto.</span>
+                </div>
+                <button id="theme-modal-close-bottom" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors cursor-pointer">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
     <!-- ==========================================
          APPLICATION LOGIC & ENGINES
          ========================================== -->
     <script type="module">
-        // 1. DATA MATRICES FOR NÚCLEO COLECTIVO
-        const conceptos = [
-            "Sostenibilidad Artesanal", "Innovación Social Digital", "Educación Inmersiva", 
-            "Salud Comunitaria Preventiva", "Cultura Urbana Regenerativa", "Turismo Experiencial Local", 
-            "Memoria Histórica Digital", "Economía Circular Textil", "Gamificación para el Cambio Social", 
-            "Arte y Neurociencia", "Diseño Biofílico Urbano", "Soberanía Alimentaria Tecnológica"
+        // 1. CONFIGURACIÓN DE LOS 6 TEMAS DE INTERÉS DE NÚCLEO COLECTIVO
+        const temasInfo = {
+            ecologia: { id: 'ecologia', label: "Ecología & Territorio", emoji: "🌿", color: "emerald", badge: "bg-emerald-950/80 text-emerald-300 border-emerald-500/40" },
+            ia: { id: 'ia', label: "IA & Tecnologías Críticas", emoji: "🤖", color: "cyan", badge: "bg-cyan-950/80 text-cyan-300 border-cyan-500/40" },
+            arte: { id: 'arte', label: "Arte & Nuevos Medios", emoji: "🎨", color: "fuchsia", badge: "bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-500/40" },
+            comunidad: { id: 'comunidad', label: "Comunidad & Cuidados", emoji: "👥", color: "amber", badge: "bg-amber-950/80 text-amber-300 border-amber-500/40" },
+            educacion: { id: 'educacion', label: "Educación & Pedagogías", emoji: "📚", color: "blue", badge: "bg-blue-950/80 text-blue-300 border-blue-500/40" },
+            ciudad: { id: 'ciudad', label: "Espacio Público & Ciudad", emoji: "🏙️", color: "rose", badge: "bg-rose-950/80 text-rose-300 border-rose-500/40" }
+        };
+
+        // MATRIZ EXPANDIDA: 36 CONCEPTOS (6 POR CADA TEMA DE INTERÉS)
+        const conceptosData = [
+            // 🌿 Ecología & Territorio
+            { text: "Sostenibilidad Artesanal", theme: "ecologia", desc: "Rescate de ciclos materiales lentos, oficios tradicionales y biodegradabilidad." },
+            { text: "Diseño Biofílico Urbano", theme: "ecologia", desc: "Integración de geometrías vivas y patrones naturales en entornos construidos." },
+            { text: "Soberanía Alimentaria Tecnológica", theme: "ecologia", desc: "Cultivos comunitarios, hidroponía y sensores abiertos para el sustento local." },
+            { text: "Biomateriales y Economía Fúngica", theme: "ecologia", desc: "Cultivo de micelio, algas y celulosa bacteriana para sustituir derivados del petróleo." },
+            { text: "Justicia Climática Comunitaria", theme: "ecologia", desc: "Defensa ecológica situada centrada en saberes ancestrales y resiliencia barrial." },
+            { text: "Simbiosis Interespecies", theme: "ecologia", desc: "Diseño y mediación para la coexistencia con polinizadores, flora nativa y ríos." },
+
+            // 🤖 IA & Tecnologías Críticas
+            { text: "Innovación Social Digital", theme: "ia", desc: "Herramientas telemáticas y algoritmos orientados a resolver necesidades comunitarias reales." },
+            { text: "Arte y Neurociencia", theme: "ia", desc: "Interfaces cerebro-computadora, estimulación sensorial y cognición expandida." },
+            { text: "Ética Algorítmica Situada", theme: "ia", desc: "Auditoría crítica y desmantelamiento de sesgos en sistemas predictivos y automatizados." },
+            { text: "Archivos Vivos e Inteligencia Colectiva", theme: "ia", desc: "Bases de datos descentralizadas y memorias comunitarias vivas en constante mutación." },
+            { text: "Soberanía de Datos y Código Abierto", theme: "ia", desc: "Infraestructuras digitales autónomas sin extractivismo corporativo ni vigilancia." },
+            { text: "Agentes Sintéticos y Co-creación con IA", theme: "ia", desc: "Modelos generativos como provocadores de diálogo, imaginación y debate colectivo." },
+
+            // 🎨 Arte & Nuevos Medios
+            { text: "Sinestesia y Percepción Expandida", theme: "arte", desc: "Cruce sensorial entre sonido, luz, texturas táctiles y vibraciones corporales." },
+            { text: "Poéticas del Glitch y Error Creativo", theme: "arte", desc: "La falla técnica, el ruido y la imperfección digital como acto de resistencia estética." },
+            { text: "Narrativas Espaciales Interactivas", theme: "arte", desc: "Relatos no lineales que se despliegan en el espacio físico según el movimiento de los cuerpos." },
+            { text: "Sonificación de Datos Invisibles", theme: "arte", desc: "Traducción de variables climáticas, campos electromagnéticos o flujos sociales en música." },
+            { text: "Escultura Procesual y Ensamblaje", theme: "arte", desc: "Instalaciones tridimensionales mutables que evolucionan mediante la interacción comunitaria." },
+            { text: "Realidad Extendida y Mundos Especulativos", theme: "arte", desc: "Superposición XR para simular escenarios alternativos de futuro en el presente." },
+
+            // 👥 Comunidad & Cuidados
+            { text: "Salud Comunitaria Preventiva", theme: "comunidad", desc: "Bienestar integral, redes de apoyo psicosocial y cuidado de la salud mental colectiva." },
+            { text: "Cuidado Radical y Apoyo Mutuo", theme: "comunidad", desc: "Estructuras de solidaridad, cocinas comunitarias y acompañamiento contra el aislamiento." },
+            { text: "Memoria Histórica Digital", theme: "comunidad", desc: "Archivos orales, relatos de resistencia barrial y rescate testimonial ante el olvido." },
+            { text: "Economía Circular Textil", theme: "comunidad", desc: "Reparación, suprarreciclaje de prendas y valoración de la memoria inscrita en las telas." },
+            { text: "Accesibilidad Universal e Inclusión Radical", theme: "comunidad", desc: "Diseño multisensorial sin barreras físicas, sensoriales o cognitivas para todas las diversidades." },
+            { text: "Justicia Intergeneracional", theme: "comunidad", desc: "Puente dialógico entre la sabiduría acumulada de los mayores y la inventiva de las infancias." },
+
+            // 📚 Educación & Pedagogías
+            { text: "Educación Inmersiva", theme: "educacion", desc: "Ambientes de aprendizaje basados en la experiencia corporal, sensorial y el asombro activo." },
+            { text: "Gamificación para el Cambio Social", theme: "educacion", desc: "Dinámicas lúdicas y juegos cooperativos para negociar conflictos y proyectar futuros." },
+            { text: "Cultura Hacker y Aprendizaje Libre", theme: "educacion", desc: "Pedagogía del desarmar, reparar y compartir código, circuitos y conocimientos sin patentes." },
+            { text: "Pedagogías del Oprimido y Escucha Profunda", theme: "educacion", desc: "Procesos formativos dialogantes donde la comunidad nombra su realidad y su potencia." },
+            { text: "Laboratorios de Prototipado Ciudadano", theme: "educacion", desc: "Espacios de experimentación abierta donde vecinos y creadores co-diseñan soluciones." },
+            { text: "Pensamiento Crítico y Alfabetización Mediática", theme: "educacion", desc: "Herramientas pedagógicas para decodificar noticias falsas, posverdad y manipulación." },
+
+            // 🏙️ Espacio Público & Ciudad
+            { text: "Cultura Urbana Regenerativa", theme: "ciudad", desc: "Activación artística de solares, callejones y áreas degradadas para la convivencia vecinal." },
+            { text: "Turismo Experiencial Local", theme: "ciudad", desc: "Rutas de afecto y memoria construidas y gestionadas por los propios habitantes del barrio." },
+            { text: "Urbanismo Táctico y Paisajes de Juego", theme: "ciudad", desc: "Intervenciones efímeras con pintura, madera y plantas para recuperar la calle para el peatón." },
+            { text: "Cartografías Emocionales y Derivas", theme: "ciudad", desc: "Mapeo sensible del afecto, el miedo y la memoria colectiva sobre el plano urbano." },
+            { text: "Patrimonio Inmaterial Vivo", theme: "ciudad", desc: "Celebración y reinvención de fiestas tradicionales, músicas de calle y recetas populares." },
+            { text: "Arquitectura Comunitaria Adaptativa", theme: "ciudad", desc: "Estructuras modulares autoconstruidas con materiales locales para usos comunitarios mutables." }
         ];
-        
-        const acciones = [
-            "Organizar Talleres Comunitarios", "Desarrollar una Plataforma Digital", "Crear una Instalación de Arte Público", 
-            "Lanzar una Campaña de Concienciación", "Diseñar un Programa de Voluntariado", "Producir un Documental Interactivo", 
-            "Crear un Laboratorio Ciudadano", "Establecer una Red de Trueque", "Lanzar un Podcast Colaborativo", 
-            "Diseñar una Experiencia de Realidad Aumentada", "Publicar un Fanzine Colectivo", "Mapear Activos Comunitarios"
+
+        // MATRIZ EXPANDIDA: 36 ACCIONES (6 POR CADA TEMA DE INTERÉS)
+        const accionesData = [
+            // 🌿 Ecología & Territorio
+            { text: "Co-construir un Huerto Urbano Hidropónico", theme: "ecologia", desc: "Diseñar e instalar un sistema de cultivo vertical comunitario con recolección de lluvia." },
+            { text: "Instalar una Estación Meteorológica Ciudadana", theme: "ecologia", desc: "Desplegar sensores DIY para medir calidad del aire, ruido y humedad ambiental en el barrio." },
+            { text: "Organizar una Feria de Reparación de Objetos", theme: "ecologia", desc: "Crear un repair café vecinal para reparar electrodomésticos, ropa y herramientas compartidas." },
+            { text: "Fabricar Mobiliario Urbano con Plástico Reciclado", theme: "ecologia", desc: "Triturar y termoprensar envases plásticos desechados para producir bancas y maceteros públicos." },
+            { text: "Diseñar un Kit de Herramientas DIY de Bajo Costo", theme: "ecologia", desc: "Armar paquetes replicables con planos libres para purificación de agua y biofertilizantes caseros." },
+            { text: "Montar un Sistema de Compostaje Colectivo", theme: "ecologia", desc: "Instalar composteras vecinales con rotación participativa y monitoreo de temperatura y bioabono." },
+
+            // 🤖 IA & Tecnologías Críticas
+            { text: "Desarrollar una Plataforma Digital", theme: "ia", desc: "Crear una aplicación web accesible de código abierto para coordinar recursos barriales." },
+            { text: "Desarrollar un Bot de Asistencia Social en WhatsApp", theme: "ia", desc: "Programar un agente conversacional accesible que oriente sobre derechos y trámites locales." },
+            { text: "Desarrollar un Visualizador de Datos Abiertos", theme: "ia", desc: "Diseñar un dashboard interactivo que exponga estadísticas de inversión pública y desigualdades." },
+            { text: "Diseñar un Dispositivo IoT Abierto con Sensores", theme: "ia", desc: "Prototipar un circuito con microcontroladores para alertar riesgos de inundación o sismos." },
+            { text: "Entrenar un Modelo Local de IA con Voces Barriales", theme: "ia", desc: "Alimentar un modelo de lenguaje ligero con relatos locales respetando la privacidad de la comunidad." },
+            { text: "Crear un Mural Interactivo con Tinta Conductiva", theme: "ia", desc: "Pintar una pared pública donde tocar los trazos active testimonios sonoros y luces programables." },
+
+            // 🎨 Arte & Nuevos Medios
+            { text: "Crear una Instalación de Arte Público", theme: "arte", desc: "Emplazar una obra escultórica inmersiva y táctil en una plaza para provocar interacción colectiva." },
+            { text: "Producir un Documental Interactivo", theme: "arte", desc: "Filmar una pieza transmedia donde los espectadores eligen rutas testimoniales y relatos cruzados." },
+            { text: "Diseñar una Experiencia de Realidad Aumentada", theme: "arte", desc: "Geolocalizar filtros y esculturas 3D en la calle que revelen capas históricas con el móvil." },
+            { text: "Realizar una Performance Audiovisual Inmersiva", theme: "arte", desc: "Orquestar un espectáculo en vivo sincronizando sintetizadores, danza y proyecciones generativas." },
+            { text: "Proyectar un Video Mapping Comunitario Participativo", theme: "arte", desc: "Iluminar fachadas emblemáticas con animaciones creadas en talleres colectivos previos." },
+            { text: "Componer una Obra Sonora con Ruido Ambiental", theme: "arte", desc: "Capturar los sonidos cotidianos del entorno y procesarlos en una sinfonía electroacústica colectiva." },
+
+            // 👥 Comunidad & Cuidados
+            { text: "Organizar Talleres Comunitarios", theme: "comunidad", desc: "Facilitar dinámicas de cocreación y diálogo horizontal con metodologías participativas Núcleo." },
+            { text: "Diseñar un Programa de Voluntariado", theme: "comunidad", desc: "Estructurar redes de cuidadores vecinales para acompañar a personas mayores y dependientes." },
+            { text: "Establecer una Red de Trueque", theme: "comunidad", desc: "Implementar un banco de tiempo e intercambio de servicios y bienes sin dinero de por medio." },
+            { text: "Implementar una Moneda Social Local", theme: "comunidad", desc: "Crear vales o tokens comunitarios de circulación cerrada para fortalecer el comercio vecinal." },
+            { text: "Facilitar Círculos de Escucha y Diálogo Restaurativo", theme: "comunidad", desc: "Mediar asambleas de confianza para sanar desacuerdos y consensuar acuerdos de convivencia." },
+            { text: "Co-diseñar un Protocolo de Emergencia Vecinal", theme: "comunidad", desc: "Elaborar una guía comunitaria impresa y digital para responder ante desastres naturales o crisis." },
+
+            // 📚 Educación & Pedagogías
+            { text: "Crear un Laboratorio Ciudadano", theme: "educacion", desc: "Habilitar un espacio físico de experimentación abierta para prototipar proyectos de interés común." },
+            { text: "Publicar un Fanzine Colectivo", theme: "educacion", desc: "Autoeditar una publicación gráfica y textual serigrafiada que compile la voz de los participantes." },
+            { text: "Lanzar un Podcast Colaborativo", theme: "educacion", desc: "Grabar y producir episodios sonoros conducidos por jóvenes y líderes comunitarios del territorio." },
+            { text: "Diseñar un Juego de Mesa Pedagógico", theme: "educacion", desc: "Crear un tablero lúdico con cartas y dados para aprender ecología, historia o derechos cívicos." },
+            { text: "Crear un Escape Room Educativo sobre Ecología", theme: "educacion", desc: "Diseñar una experiencia inmersiva de retos lógicos para descubrir cómo regenerar un ecosistema." },
+            { text: "Facilitar un Hackatón de Innovación Comunitaria", theme: "educacion", desc: "Convocar 48 horas de trabajo interdisciplinario entre programadores, artistas y líderes sociales." },
+
+            // 🏙️ Espacio Público & Ciudad
+            { text: "Mapear Activos Comunitarios", theme: "ciudad", desc: "Cartografiar colectivamente recursos, saberes, puntos de agua y talentos ocultos del barrio." },
+            { text: "Montar una Radio Comunitaria Web y FM", theme: "ciudad", desc: "Levantar una antena de baja potencia y streaming digital para transmitir contenidos autogestionados." },
+            { text: "Publicar un Archivo Web de Memorias Orales", theme: "ciudad", desc: "Digitalizar fotografías familiares y testimonios de los fundadores del barrio en acceso libre." },
+            { text: "Realizar un Museo Itinerante en Carretillas", theme: "ciudad", desc: "Montar vitrinas móviles sobre carretas para llevar obras de arte y artefactos históricos a las esquinas." },
+            { text: "Montar un Domo Geodésico de Convivencia", theme: "ciudad", desc: "Erigir una estructura tubular ligera desmontable para cobijar cine al aire libre y asambleas." },
+            { text: "Organizar un Festival Callejero Autogestionado", theme: "ciudad", desc: "Tomar una calle peatonal durante un día con música acústica, mesas de dibujo y trueque de plantas." }
         ];
-        
-        const desafios = [
-            "Falta de Recursos Económicos", "Desinterés Comunitario", "Barreras Tecnológicas", 
-            "Competencia con Grandes Corporaciones", "Regulaciones Gubernamentales Estrictas", "Impacto Ambiental Negativo", 
-            "Gentrificación Cultural", "Brecha Generacional", "Desinformación y Noticias Falsas", 
-            "Apatía Política", "Saturación del Mercado", "Vandalismo y Falta de Cuidado"
+
+        // MATRIZ EXPANDIDA: 36 DESAFÍOS (6 POR CADA TEMA DE INTERÉS)
+        const desafiosData = [
+            // 🌿 Ecología & Territorio
+            { text: "Impacto Ambiental Negativo", theme: "ecologia", desc: "Huella ecológica severa, vertidos industriales y acumulación de basuras sin gestionar." },
+            { text: "Ansiedad Climática y Eco-duelo", theme: "ecologia", desc: "Desesperanza e impotencia emocional ante la crisis ecológica global y local." },
+            { text: "Sobreexplotación del Agua y Contaminación", theme: "ecologia", desc: "Escasez de agua potable, secado de fuentes naturales y privatización de cuencas." },
+            { text: "Pérdida de Biodiversidad y Polinizadores", theme: "ecologia", desc: "Desaparición de abejas, aves nativas y flora autóctona por uso intensivo de pesticidas." },
+            { text: "Descarte Masivo de Residuos Electrónicos", theme: "ecologia", desc: "Acumulación tóxica de chatarra tecnológica obsolescente sin canales de reciclaje." },
+            { text: "Falta de Espacios Verdes Accesibles", theme: "ecologia", desc: "Ausencia de árboles, parques infantiles y sombra en barrios con alta densidad habitacional." },
+
+            // 🤖 IA & Tecnologías Críticas
+            { text: "Barreras Tecnológicas", theme: "ia", desc: "Falta de dispositivos, conectividad precaria y analfabetismo digital en la población." },
+            { text: "Dependencia de Algoritmos Privativos", theme: "ia", desc: "Subordinación a modelos de caja negra corporativos sin transparencia ni explicabilidad." },
+            { text: "Extractivismo de Datos y Pérdida de Privacidad", theme: "ia", desc: "Monetización inconsulta de la vida cotidiana y vigilancia predictiva desmedida." },
+            { text: "Discriminación Algorítmica en Servicios Básicos", theme: "ia", desc: "Sesgos automáticos que niegan créditos, empleo o subsidios a poblaciones vulnerables." },
+            { text: "Fatiga Digital y Desconexión Sensorial", theme: "ia", desc: "Saturación cognitiva, aislamiento por pantallas y pérdida del contacto presencial." },
+            { text: "Desinformación y Noticias Falsas", theme: "ia", desc: "Propagación masiva de bulos virales que erosionan la confianza cívica y la salud pública." },
+
+            // 🎨 Arte & Nuevos Medios
+            { text: "Saturación del Mercado", theme: "arte", desc: "Dificultad para visibilizar propuestas artísticas genuinas ante la masa de contenidos comerciales efímeros." },
+            { text: "Pérdida de Saberes y Oficios Tradicionales", theme: "arte", desc: "Muerte de técnicas artesanales milenarias por falta de relevo generacional y desprecio social." },
+            { text: "Censura o Estigmatización de la Expresión Libre", theme: "arte", desc: "Presiones institucionales o vecinales que limitan el arte contestatario y las narrativas disidentes." },
+            { text: "Precarización Laboral del Sector Cultural", theme: "arte", desc: "Falta de remuneración digna, ausencia de contratos formales y subsidios intermitentes." },
+            { text: "Centralismo Cultural y Desierto Periférico", theme: "arte", desc: "Concentración de galerías y festivales en el centro adinerado, abandonando las barriadas." },
+            { text: "Consumo Pasivo de Contenidos", theme: "arte", desc: "Espectadores acostumbrados a consumir sin participar, reflexionar ni cuestionar el dispositivo." },
+
+            // 👥 Comunidad & Cuidados
+            { text: "Falta de Recursos Económicos", theme: "comunidad", desc: "Presupuestos nulos o insuficientes para financiar materiales, transporte y logística de base." },
+            { text: "Brecha Generacional", theme: "comunidad", desc: "Desconexión y desconfianza entre las vivencias de los mayores y los códigos de las juventudes." },
+            { text: "Soledad no Deseada en la Población Mayor", theme: "comunidad", desc: "Aislamiento involuntario de ancianos en sus hogares sin redes de soporte afectivo." },
+            { text: "Sobrecarga de Tareas de Cuidado no Remuneradas", theme: "comunidad", desc: "Desgaste invisible concentrado en mujeres y cuidadoras sin reconocimiento ni apoyo público." },
+            { text: "Invisibilización de Minorías y Disidencias", theme: "comunidad", desc: "Exclusión estructural de personas con discapacidad, identidades diversas y comunidades migrantes." },
+            { text: "Polarización Social y Discursos de Odio", theme: "comunidad", desc: "Fractura de la convivencia vecinal alimentada por prejuicios, clasismo o xenofobia." },
+
+            // 📚 Educación & Pedagogías
+            { text: "Desinterés Comunitario", theme: "educacion", desc: "Apatía colectiva, cansancio participativo y escepticismo sobre la utilidad de involucrarse." },
+            { text: "Lenguaje Técnico Inaccesible en Ciencia", theme: "educacion", desc: "Jerga académica hermética que expulsa a las personas comunes del debate sobre tecnología." },
+            { text: "Burocracia Asfixiante para Colectivos", theme: "educacion", desc: "Trámites interminables y exigencias jurídicas inalcanzables para grupos comunitarios." },
+            { text: "Ausencia de Espacios para Infancias en la Ciudad", theme: "educacion", desc: "Entornos hostiles al juego libre infantil, donde los niños son vistos como un estorbo." },
+            { text: "Deserción y Pérdida de Sentido Educativo", theme: "educacion", desc: "Escuelas desvinculadas de los problemas del barrio, con metodologías mecánicas y obsoletas." },
+            { text: "Apatía Política", theme: "educacion", desc: "Sensación de que ninguna acción ciudadana puede transformar las decisiones del poder establecido." },
+
+            // 🏙️ Espacio Público & Ciudad
+            { text: "Gentrificación Cultural", theme: "ciudad", desc: "Encarecimiento desmedido del suelo que expulsa a los pobladores históricos y reemplaza la identidad barrial." },
+            { text: "Vandalismo y Falta de Cuidado", theme: "ciudad", desc: "Deterioro acelerado de bienes públicos, basura acumulada y falta de sentido de pertenencia." },
+            { text: "Inseguridad y Miedo en el Espacio Público", theme: "ciudad", desc: "Percepción de violencia que vacía las calles de noche y confina a las personas en sus casas." },
+            { text: "Dificultades de Movilidad y Transporte Público", theme: "ciudad", desc: "Rutas deficientes, tarifas abusivas y tiempos de traslado extenuantes para los trabajadores." },
+            { text: "Monopolios en Cadenas de Distribución", theme: "ciudad", desc: "Imposibilidad para pequeños productores de competir contra grandes superficies comerciales." },
+            { text: "Pérdida de Identidad Territorial y Desarraigo", theme: "ciudad", desc: "Homogeneización de los barrios bajo franquicias globales y pérdida de la historia local." }
         ];
-        
-        const contextos = [
-            "una Comunidad Rural Aislada", "un Centro Cultural Urbano", "una Escuela Pública con Bajos Recursos", 
-            "un Mercado Local de Artesanos", "un Espacio Digital Descentralizado (Metaverso)", "un Parque Natural Protegido", 
-            "una Biblioteca Pública", "un Barrio Histórico en Transformación", "una Plataforma de Streaming", 
-            "un Festival de Música Independiente", "un Hospital Público", "una Antigua Zona Industrial"
+
+        // MATRIZ EXPANDIDA: 36 CONTEXTOS (6 POR CADA TEMA DE INTERÉS)
+        const contextosData = [
+            // 🌿 Ecología & Territorio
+            { text: "un Parque Natural Protegido", theme: "ecologia", desc: "Área de reserva ecológica amenazada por el turismo extractivo y la presión urbana." },
+            { text: "una Cuenca Hidrográfica o Río Contaminado", theme: "ecologia", desc: "Ribera fluvial degradada donde conviven asentamientos populares y vertidos residuales." },
+            { text: "un Humedal Urbano Amenazado por Inmobiliarias", theme: "ecologia", desc: "Ecosistema lacustre esponja de agua en riesgo inminente de desecación y relleno." },
+            { text: "una Red de Huertos Urbanos Vecinales", theme: "ecologia", desc: "Red de parcelas comunitarias en solares recuperados cultivadas por familias del barrio." },
+            { text: "una Comuna de Pescadores Artesanales", theme: "ecologia", desc: "Poblado costero o lacustre que lucha contra la pesca industrial de arrastre y la erosión marina." },
+            { text: "un Corredor Ecológico Urbano", theme: "ecologia", desc: "Franja verde discontinua entre avenidas transitadas que conecta cerros tutelares con la ciudad." },
+
+            // 🤖 IA & Tecnologías Críticas
+            { text: "un Espacio Digital Descentralizado (Metaverso)", theme: "ia", desc: "Comunidad virtual abierta que experimenta con economías no corporativas e identidades fluidas." },
+            { text: "una Plataforma de Streaming Comunitaria", theme: "ia", desc: "Servidor libre autogestionado por activistas de medios y realizadores audiovisuales independientes." },
+            { text: "un Espacio Maker o Taller de Fabricación Abierto", theme: "ia", desc: "Galpón comunitario con impresoras 3D, cortadoras láser y herramientas para crear prototipos." },
+            { text: "un Laboratorio Universitario de Inteligencia Artificial", theme: "ia", desc: "Campus de investigación pública donde estudiantes cuestionan las aplicaciones éticas de la IA." },
+            { text: "una Red Comunitaria Mesh de Internet Libre", theme: "ia", desc: "Infraestructura inalámbrica de barrio sin conexión a empresas de telecomunicaciones." },
+            { text: "un Hacklab de Recuperación de Hardware", theme: "ia", desc: "Taller barrial de rescate de ordenadores desechados instalando sistemas operativos libres." },
+
+            // 🎨 Arte & Nuevos Medios
+            { text: "un Centro Cultural Urbano", theme: "arte", desc: "Institución barrial polivalente con salas de exposición, talleres de artes escénicas y biblioteca." },
+            { text: "un Festival de Música Independiente", theme: "arte", desc: "Encuentro autogestionado en descampados con bandas emergentes y experimentación sonora." },
+            { text: "un Museo Itinerante en Carretillas", theme: "arte", desc: "Dispositivo móvil que lleva obras contemporáneas a ferias libres y parques periféricos." },
+            { text: "un Barrio Histórico en Transformación", theme: "arte", desc: "Casco antiguo con arquitectura patrimonial en tensión entre preservación vecinal y turismo masivo." },
+            { text: "un Teatro Comunitario Autogestionado", theme: "arte", desc: "Sala independiente levantada por dramaturgos y vecinos como trinchera cultural del barrio." },
+            { text: "un Colectivo de Vendedoras Ambulantes", theme: "arte", desc: "Sindicato informal de trabajadoras callejeras que ocupan el espacio público con puestos móviles." },
+
+            // 👥 Comunidad & Cuidados
+            { text: "una Residencia Comunitaria de Personas Mayores", theme: "comunidad", desc: "Hogar de ancianos de gestión pública con necesidad de estímulos cognitivos y afectivos." },
+            { text: "un Comedor Popular Autogestionado", theme: "comunidad", desc: "Cocina solidaria liderada por madres de familia que garantiza almuerzos diarios en la periferia." },
+            { text: "un Albergue Temporal para Refugiados", theme: "comunidad", desc: "Espacio de acogida para familias desplazadas por crisis humanitarias en búsqueda de arraigo." },
+            { text: "una Comunidad Indígena en Recuperación de Tierras", theme: "comunidad", desc: "Resguardo originario en proceso de revitalización lingüística, espiritual y agrícola." },
+            { text: "un Colectivo de Mujeres Víctimas del Conflicto", theme: "comunidad", desc: "Asociación de tejedoras y lideresas que procesan el duelo mediante el arte textil y la memoria." },
+            { text: "una Cárcel o Centro de Reinserción Social", theme: "comunidad", desc: "Pabellón penitenciario donde se ensayan talleres artísticos como vía de emancipación humana." },
+
+            // 📚 Educación & Pedagogías
+            { text: "una Escuela Pública con Bajos Recursos", theme: "educacion", desc: "Colegio de primaria en zona vulnerable con docentes comprometidos pero escasa infraestructura." },
+            { text: "una Biblioteca Pública de Barrio", theme: "educacion", desc: "Espacio de lectura y mediación cultural que funciona como refugio de encuentro para todas las edades." },
+            { text: "un Parque Biblioteca en la Ladera de la Ciudad", theme: "educacion", desc: "Complejo arquitectónico social enclavado en una comuna popular con acceso a internet y formación." },
+            { text: "una Universidad Pública en Paro Estudiantil", theme: "educacion", desc: "Campus universitario tomado por asambleas deliberativas debatiendo reformas estructurales." },
+            { text: "un Centro Juvenil de Expresión Callejera", theme: "educacion", desc: "Espacio autogestionado por grafiteros, colectivos de hip-hop y skaters en una nave abandonada." },
+            { text: "un Barrio con Alta Densidad de Jóvenes Desempleados", theme: "educacion", desc: "Sector residencial periférico donde la juventud busca salidas creativas frente a la falta de trabajo." },
+
+            // 🏙️ Espacio Público & Ciudad
+            { text: "un Mercado Local de Artesanos", theme: "ciudad", desc: "Plaza techada donde creadores comercializan cerámica, tejidos, cestería y orfebrería de autor." },
+            { text: "una Plaza de Mercado Tradicional", theme: "ciudad", desc: "Epicentro de abastos donde confluyen campesinos, cocineras tradicionales y compradores populares." },
+            { text: "una Antigua Zona Industrial en Desuso", theme: "ciudad", desc: "Complejo fabril abandonado con naves de ladrillo aptas para reconversión social y artística." },
+            { text: "un Asentamiento Informal en la Periferia", theme: "ciudad", desc: "Comunidad nacida de la autoconstrucción comunitaria en laderas sin saneamiento formal." },
+            { text: "una Estación Central de Transporte Intermodal", theme: "ciudad", desc: "Nodo masivo de transbordo entre trenes, autobuses y bicicletas con flujo constante de miles de personas." },
+            { text: "una Comunidad Rural Aislada", theme: "ciudad", desc: "Aldea campesina sin cobertura móvil donde las decisiones se toman en mingas y asambleas veredales." }
         ];
+
+        // MATRICES PLANAS COMPATIBLES CON TODO EL MOTOR EXISTENTE (36 ELEMENTOS CADA UNA)
+        const conceptos = conceptosData.map(d => d.text);
+        const acciones = accionesData.map(d => d.text);
+        const desafios = desafiosData.map(d => d.text);
+        const contextos = contextosData.map(d => d.text);
 
         const cardStyles = {
             CONCEPTO: { 
@@ -2528,7 +2878,7 @@
             });
         }
 
-        // 18. AMBIENT ATMOSPHERE THEMES LOGIC (CATÁLOGO DE 30 FONDOS NÚCLEO COLECTIVO)
+        // 18. AMBIENT ATMOSPHERE THEMES LOGIC (CATÁLOGO DE 20 FONDOS NÚCLEO COLECTIVO)
         const ambientThemes = {};
         nucleoArtworks.forEach(art => {
             ambientThemes['obra' + art.id] = {
@@ -2539,7 +2889,7 @@
                 file: art.file,
                 url: art.url,
                 fallback: art.fallback,
-                style: `radial-gradient(ellipse at 50% 15%, rgba(6, 182, 212, 0.20) 0%, transparent 65%), linear-gradient(to bottom, rgba(6, 9, 17, 0.65) 0%, rgba(6, 9, 17, 0.40) 45%, rgba(6, 9, 17, 0.88) 100%), url('${art.url}'), url('${art.fallback}')`
+                style: `url('${art.url}'), url('${art.fallback}')`
             };
         });
 
@@ -2552,9 +2902,17 @@
             const theme = ambientThemes[themeKey] || defaultTheme;
             currentThemeId = theme.id;
 
+            const bgUrls = `url('${theme.url}'), url('${theme.fallback}')`;
+
             if (ambientBgLayer) {
-                ambientBgLayer.style.backgroundImage = theme.style;
+                ambientBgLayer.style.backgroundImage = bgUrls;
             }
+            document.body.style.backgroundImage = `
+                radial-gradient(ellipse at 50% 25%, rgba(6, 182, 212, 0.16) 0%, transparent 65%),
+                linear-gradient(to bottom, rgba(5, 8, 16, 0.40) 0%, rgba(5, 8, 16, 0.15) 45%, rgba(5, 8, 16, 0.65) 100%),
+                ${bgUrls}
+            `;
+
             localStorage.setItem('nucleo_ambient_theme', theme.id);
             if (notify) {
                 showToast(`Fondo visual: ${theme.name}`, theme.icon);
